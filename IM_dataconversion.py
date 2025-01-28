@@ -651,6 +651,20 @@ for sess, sess_obj in zip(session_list, sessions):
 
 # Calculate mean activity
 
+def get_response_triggered_image(ses, natimgdata):
+    
+    respmean,imageids   = mean_resp_image(ses)
+
+    N                   = np.shape(ses.respmat)[0]
+
+    # Compute response triggered average image:
+    # N = 100
+    # for iN in range(N):
+    ses.RTA             = np.empty((*np.shape(natimgdata)[:2], N))
+    for iN in tqdm(range(N),desc='Computing RTAs', leave=False):
+        ses.RTA[:, :, iN] = np.average(natimgdata[:,:,imageids], axis=2, weights=respmean[iN, :])
+        
+    return ses
 
 for sess, sess_obj in zip(session_list, sessions):
 
@@ -658,6 +672,9 @@ for sess, sess_obj in zip(session_list, sessions):
 
     az_lims = [-1, 1]
     el_lims = [-1, 1] # for converting to mean neuronal activity for gaussian.py
+
+    if not hasattr(sess_obj,'RTA'):
+        sess_obj         = get_response_triggered_image(sess_obj, natimgdata)
 
     ypix,xpix,N = np.shape(sess_obj.RTA)
     xmap        = np.linspace(*az_lims,xpix)
