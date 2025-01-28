@@ -5,14 +5,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.stats as st
+from scipy import ndimage
 from tqdm.auto import tqdm
 import sys
 from sensorium.utility.training import read_config
 from loaddata.session_info import load_sessions
 from utils.imagelib import load_natural_images
+from utils.tuning import mean_resp_image
 from utils.explorefigs import *
 from loaddata.get_data_folder import get_local_drive
 import shutil
+import torch
+
 
 # If you want to save a subset of the data, define these manually here. All three variables have to be defined. Else, leave this blank
 
@@ -644,3 +648,38 @@ for sess, sess_obj in zip(session_list, sessions):
 
     # trial_idx
     np.save(f'{folder}/trial_idx.npy', trial_data['TrialNumber'].values)
+
+# Calculate mean activity
+
+
+for sess, sess_obj in zip(session_list, sessions):
+
+    sess_obj.celldata['rf_az_F'] = sess_obj.celldata['rf_el_F'] = sess_obj.celldata['rf_r2_F'] = np.nan
+
+    az_lims = [-1, 1]
+    el_lims = [-1, 1] # for converting to mean neuronal activity for gaussian.py
+
+    ypix,xpix,N = np.shape(sess_obj.RTA)
+    xmap        = np.linspace(*az_lims,xpix)
+    ymap        = np.linspace(*el_lims,ypix)
+    # N = 100
+    zthr        = 3
+    rf_data     = pd.DataFrame(data=np.full((N,2),np.nan),columns=['rf_az_F','rf_el_F'])
+
+    for iN in range(N):
+        dev = zscore(sess_obj.RTA[:, :, iN].copy()-128,axis=None)
+        dev[np.abs(dev)<zthr]=0
+        if np.any(dev):
+            (y, x) = np.round(ndimage.center_of_mass(np.abs(dev))).astype(int) # have to flip x and y because this gives row and column instead of x and y in image space
+            rf_data.loc[iN,'rf_az_F'] = xmap[x]
+            rf_data.loc[iN,'rf_el_F'] = ymap[y]
+
+    # Save rf_data
+    out_mat = rf_data.to_numpy()
+    
+    # to torch tensor
+    out_mat = torch.tensor(out_mat, dtype=torch.float32)
+    # save
+    folder = f'{OUTPUT_FOLDER}/{sess[0]}/{sess[1]}/meta/neurons'
+    os.makedirs(folder, exist_ok=True)
+    torch.save(out_mat, f'{folder}/rf_data.pt')
