@@ -519,6 +519,9 @@ class FullGaussian2d(Readout):
         if self.bias is not None:
             self.initialize_bias(mean_activity=mean_activity)
 
+        print(self.bias.data.shape)
+        # raise Exception("Stop here")
+
     def initialize_features(self, match_ids=None, shared_features=None):
         """
         The internal attribute `_original_features` in this function denotes whether this instance of the FullGuassian2d

@@ -39,12 +39,14 @@ parser.add_argument('-m', '--model_name', default='model_for_testing')
 parser.add_argument('-l', '--save_location', default='saved_models')
 parser.add_argument('-cl', '--config_location', default='model_configs')
 parser.add_argument('-dl', '--data_location', default='data')
+parser.add_argument('-iwm', '--init_w_mean_activity', default=False)
 args = parser.parse_args()
 
 model_name = args.model_name
 save_location = args.save_location
 config_location = args.config_location
 data_location = args.data_location
+init_w_mean_activity = args.init_w_mean_activity
 
 save_folder = os.path.join( save_location, model_name )
 os.makedirs( save_folder, exist_ok=True )
@@ -96,12 +98,27 @@ model_fn = config['model_fn']     # e.g. 'sensorium.models.modulated_stacked_cor
 model_config = config['model_config']
 
 model_config['data_path'] = data_location
+model_config['init_w_mean_activity'] = init_w_mean_activity
+model_config['mean_activity_path'] = 123
 
 model = get_model(model_fn=model_fn,
                   model_config=model_config,
                   dataloaders=dataloaders,
                   seed=config['model_seed'],
                  )
+
+# If init w mean activity is set, set the mean locations to their respective values after initialization
+if init_w_mean_activity:
+    data_keys = list(model.readout._modules.keys())
+
+    for data_key in data_keys:
+        key_base = data_key.split('-')[0]
+        session_id = data_key.split('-')[1]
+
+        init_activity_path = os.path.join(data_folder, 'data', key_base, session_id, 'meta', 'neurons', 'rf_data.pt')
+        init_activity = torch.load(init_activity_path)
+
+        model.readout._modules[data_key].mu = torch.nn.Parameter(init_activity.clone().detach().to(model.readout._modules[data_key].mu.device))
 
 #####################################
 ## LOAD PRETRAINED CORE

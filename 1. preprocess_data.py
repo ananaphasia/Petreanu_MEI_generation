@@ -2,11 +2,10 @@ import sys
 import os
 import shutil
 import numpy as np
-import matplotlib.pyplot as plt
 import glob
 from tqdm.auto import tqdm
 import datetime
-import scipy as sci
+from scipy.stats import zscore
 from pathlib import Path
 from sensorium.utility.training import read_config, set_seed
 from nnfabrik.builder import get_data, get_model
@@ -523,13 +522,13 @@ for folder in folders:
     tier_raw = np.load(os.path.join(folder + tier_file))
 
     # create 5 shuffles of train/val while keeping test data in place
-    ensemble_tier = np.zeros((5, len(tier_raw)), dtype='<U10')
+    ensemble_tier = np.zeros((run_config['dev']['num_models'], len(tier_raw)), dtype='<U10')
     train_val_locs = (tier_raw == 'train') | (tier_raw == 'validation')
     to_shuffle = tier_raw[train_val_locs]
 
     # seed here to make it independent of order of folders
     np.random.seed(35382)
-    for i in range(5):
+    for i in range(run_config['dev']['num_models']):
         ensemble_tier[i, :] = np.copy(tier_raw)
         ensemble_tier[i, train_val_locs] = np.random.permutation(to_shuffle)
 
@@ -544,5 +543,3 @@ for folder in folders:
     # plt.title(folder)
     # plt.legend(['train', 'validation', 'test', 'final_test'])
     # plt.xlim((0, 1000))
-
-### Train models

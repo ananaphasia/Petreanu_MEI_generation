@@ -40,6 +40,8 @@ def modulated_stacked_core_full_gauss_readout(
     init_sigma=1.0,
     readout_bias=True,
     gamma_readout=4,
+    init_w_mean_activity=True,
+    mean_activity_path=None,
     max_jitter=0,
     max_jitter_x=0,
     max_jitter_y=0,
@@ -111,6 +113,9 @@ def modulated_stacked_core_full_gauss_readout(
     set_random_seed(seed)
     grid_mean_predictor, grid_mean_predictor_type, source_grids = prepare_grid(
         grid_mean_predictor, dataloaders)
+    
+    # if init_w_mean_activity:
+    #     # load the tensor from use_mean_activity path
 
     core = Stacked2dCore(
         input_channels=core_input_channels,
