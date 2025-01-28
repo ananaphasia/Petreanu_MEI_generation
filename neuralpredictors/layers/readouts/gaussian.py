@@ -422,6 +422,13 @@ class FullGaussian2d(Readout):
         else:
             return self._mu
 
+    @mu.setter
+    def mu(self, value):
+        if self._predicted_grid or self._shared_grid:
+            raise AttributeError("Cannot set mu directly when using predicted or shared grid.")
+        else:
+            self._mu.data = value
+
     def sample_grid(self, batch_size, sample=None):
         """
         Returns the grid locations from the core by sampling from a Gaussian distribution
