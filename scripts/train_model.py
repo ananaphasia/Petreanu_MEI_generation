@@ -4,7 +4,22 @@ Adrian 2022-10-03 """
 
 print('Running script train_model.py')
 
-import sys, os
+import sys
+import os
+import torch
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import argparse
+import shutil
+import warnings
+from nnfabrik.builder import get_data, get_model, get_trainer
+from sensorium.utility.training import read_config, print_t, set_seed
+from sensorium.utility import prediction
+
+warnings.filterwarnings('ignore')
+
 # Set working directory to root of repo
 current_path = os.getcwd()
 # Identify if path has 'molanalysis' as a folder in it
@@ -17,21 +32,6 @@ else:
 os.chdir(current_path)
 sys.path.append(current_path)
 sys.path.insert(0, '.')  # hacky solution for now, TODO: fix
-
-# imports
-import torch
-import numpy as np
-import pandas as pd
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-import argparse
-import shutil
-
-import warnings
-warnings.filterwarnings('ignore')
-from nnfabrik.builder import get_data, get_model, get_trainer
-from sensorium.utility.training import read_config, print_t, set_seed
 
 # read command line arguments
 parser = argparse.ArgumentParser()
@@ -140,7 +140,6 @@ torch.save(model.state_dict(), os.path.join(save_folder, 'saved_model_v1.pth') )
 
 
 # Run predictions
-from sensorium.utility import prediction
 
 # calculate predictions per dataloader
 results = prediction.all_predictions_with_trial(model, dataloaders)
