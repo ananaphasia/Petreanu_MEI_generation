@@ -424,8 +424,10 @@ class FullGaussian2d(Readout):
 
     @mu.setter
     def mu(self, value):
-        if self._predicted_grid or self._shared_grid:
-            raise AttributeError("Cannot set mu directly when using predicted or shared grid.")
+        if self._predicted_grid:
+            self.mu_transform.weight.data = value
+        elif self._shared_grid:
+            self._mu.data[self.grid_sharing_index] = value
         else:
             self._mu.data = value
 
