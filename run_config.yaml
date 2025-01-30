@@ -1,6 +1,6 @@
 ## Configuration file for the run
 
-RUN_NAME: with_variability # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_NAME: testing123 # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
 ASK_FOR_CONFIRMATION: True # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
 RUN_FOLDER_OVERWRITE: None # None or string with folder where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
 

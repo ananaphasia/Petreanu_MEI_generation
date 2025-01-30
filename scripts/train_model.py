@@ -15,8 +15,6 @@ import argparse
 import shutil
 import warnings
 from nnfabrik.builder import get_data, get_model, get_trainer
-from sensorium.utility.training import read_config, print_t, set_seed
-from sensorium.utility import prediction
 
 warnings.filterwarnings('ignore')
 
@@ -32,6 +30,9 @@ else:
 os.chdir(current_path)
 sys.path.append(current_path)
 sys.path.insert(0, '.')  # hacky solution for now, TODO: fix
+
+from sensorium.utility.training import read_config, print_t, set_seed
+from sensorium.utility import prediction
 
 # read command line arguments
 parser = argparse.ArgumentParser()
@@ -114,11 +115,12 @@ if init_w_mean_activity:
     for data_key in data_keys:
         key_base = data_key.split('-')[0]
         session_id = data_key.split('-')[1]
+        session_id = '_'.join(session_id.split('_')[1:])
 
         init_activity_path = os.path.join(data_folder, 'data', key_base, session_id, 'meta', 'neurons', 'rf_data.pt')
         init_activity = torch.load(init_activity_path)
 
-        model.readout._modules[data_key].mu = torch.nn.Parameter(init_activity.clone().detach().to(model.readout._modules[data_key].mu.device))
+        model.readout._modules[data_key].mu = init_activity.clone().detach().to(model.readout._modules[data_key].mu.device)
 
 #####################################
 ## LOAD PRETRAINED CORE

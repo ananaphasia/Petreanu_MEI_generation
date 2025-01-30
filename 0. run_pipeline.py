@@ -16,12 +16,11 @@ sys.path.append(current_path)
 
 # list of relative locations, in order, of the python scripts to be run
 files_list = [
-    # "../molanalysis/MEI_generation/IM_dataconversion.py",
     'IM_dataconversion.py',
     "1. preprocess_data.py",
     "2. train_models.py",
-    "3. evaluate.py",
-    "4. generateMEIs.py"
+    # "3. evaluate.py",
+    # "4. generateMEIs.py"
     ]
 
 current_path = os.getcwd()
