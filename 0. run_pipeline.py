@@ -19,8 +19,8 @@ files_list = [
     'IM_dataconversion.py',
     "1. preprocess_data.py",
     "2. train_models.py",
-    # "3. evaluate.py",
-    # "4. generateMEIs.py"
+    "3. evaluate.py",
+    "4. generateMEIs.py"
     ]
 
 current_path = os.getcwd()
