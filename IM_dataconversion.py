@@ -695,8 +695,8 @@ for sess, sess_obj in zip(session_list, sessions):
     out_mat = rf_data.to_numpy()
 
     # Reshape to (1, N, 1, 2)
-    out_mat = np.expand_dims(out_mat, axis=0)
-    out_mat = np.expand_dims(out_mat, axis=2)
+    # out_mat = np.expand_dims(out_mat, axis=0)
+    # out_mat = np.expand_dims(out_mat, axis=2)
     
     # to torch tensor
     out_mat = torch.tensor(out_mat, dtype=torch.float32)
