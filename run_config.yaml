@@ -1,7 +1,7 @@
 ## Configuration file for the run
 
-RUN_NAME: testing123 # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
-ASK_FOR_CONFIRMATION: True # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
+RUN_NAME: V1_without_grid_mean_predictor # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+ASK_FOR_CONFIRMATION: False # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
 RUN_FOLDER_OVERWRITE: None # None or string with folder where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
 
 model:
@@ -10,7 +10,7 @@ model:
 # Data parameters
 data:
   keep_behavioral_info: False
-  area_of_interest: 'PM' # None for all neurons, 'PM' for only PM neurons, 'V1' for only V1 neurons
+  area_of_interest: 'V1' # None for all neurons, 'PM' for only PM neurons, 'V1' for only V1 neurons
   sessions_to_keep: 'all' # 'all' or list of sessions to keep, eg [['LPE10885', '2023_10_20'], ...]
 
   # Preprocessing
