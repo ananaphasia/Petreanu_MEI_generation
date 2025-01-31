@@ -1,7 +1,10 @@
 import copy
+import numpy as np
+import os
+import torch
 
 
-def prepare_grid(grid_mean_predictor, dataloaders):
+def prepare_grid(grid_mean_predictor, dataloaders, **kwargs):
     """
     Utility function for using the neurons cortical coordinates
     to guide the readout locations in image space.
@@ -36,4 +39,22 @@ def prepare_grid(grid_mean_predictor, dataloaders):
                 k: v.dataset.neurons.cell_motor_coordinates[:, :input_dim]
                 for k, v in dataloaders.items()
             }
+        elif grid_mean_predictor_type == "RF":
+            input_dim = grid_mean_predictor.pop("input_dimensions", 2)
+            input_path = kwargs.get("input_path", None)
+            if input_path is not None:
+                source_grids = {
+                    k: torch.load(os.path.join(input_path, 
+                                    k.split('-')[0], # eg, LPE10885
+                                    '_'.join(k.split('-')[1].split('_')[1:]), # eg, 2020_03_20
+                                    f"{k}_grid.npy",
+                                    'meta', 'neurons',
+                                    'rf_data.pt'
+                                    ) ).cpu().detach().numpy()[:, :input_dim]
+                                    for k, v in dataloaders.items()
+                }
+            else:
+                raise ValueError("input_path must be provided for RF grid_mean_predictor")
+        else:
+            raise ValueError(f"Unknown grid_mean_predictor_type: {grid_mean_predictor_type}")
     return grid_mean_predictor, grid_mean_predictor_type, source_grids

@@ -282,6 +282,7 @@ class FullGaussian2d(Readout):
         mean_activity=None,
         feature_reg_weight=1.0,
         gamma_readout=None,  # depricated, use feature_reg_weight instead
+        _mu_initial=None,
         max_jitter=0,
         max_jitter_x = 0,
         max_jitter_y = 0,
@@ -293,6 +294,9 @@ class FullGaussian2d(Readout):
         self.mean_activity = mean_activity
         # determines whether the Gaussian is isotropic or not
         self.gauss_type = gauss_type
+
+        if _mu_initial:
+            self._mu_initial = _mu_initial
 
         self.max_jitter = max_jitter
         self.max_jitter_x = max_jitter_x

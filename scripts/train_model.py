@@ -100,27 +100,13 @@ model_config = config['model_config']
 
 model_config['data_path'] = data_location
 model_config['init_w_mean_activity'] = init_w_mean_activity
-model_config['mean_activity_path'] = 123
+model_config['mean_activity_basepath'] = data_location
 
 model = get_model(model_fn=model_fn,
                   model_config=model_config,
                   dataloaders=dataloaders,
                   seed=config['model_seed'],
                  )
-
-# If init w mean activity is set, set the mean locations to their respective values after initialization
-if init_w_mean_activity:
-    data_keys = list(model.readout._modules.keys())
-
-    for data_key in data_keys:
-        key_base = data_key.split('-')[0]
-        session_id = data_key.split('-')[1]
-        session_id = '_'.join(session_id.split('_')[1:])
-
-        init_activity_path = os.path.join(data_folder, 'data', key_base, session_id, 'meta', 'neurons', 'rf_data.pt')
-        init_activity = torch.load(init_activity_path)
-
-        model.readout._modules[data_key].mu = init_activity.clone().detach().to(model.readout._modules[data_key].mu.device)
 
 #####################################
 ## LOAD PRETRAINED CORE
