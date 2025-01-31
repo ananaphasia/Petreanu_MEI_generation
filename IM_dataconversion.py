@@ -661,8 +661,10 @@ def get_response_triggered_image(ses, natimgdata):
     # N = 100
     # for iN in range(N):
     ses.RTA             = np.empty((*np.shape(natimgdata)[:2], N))
-    for iN in tqdm(range(N),desc='Computing RTAs', leave=False):
-        ses.RTA[:, :, iN] = np.average(natimgdata[:,:,imageids], axis=2, weights=respmean[iN, :])
+    # for iN in tqdm(range(N),desc='Computing RTAs', leave=False):
+    #     ses.RTA[:, :, iN] = np.average(natimgdata[:,:,imageids], axis=2, weights=respmean[iN, :])
+    weight_sums = np.sum(respmean, axis = 1)
+    ses.RTA = np.tensordot(natimgdata[:,:,imageids], respmean, axes=([2], [1])) / weight_sums
         
     return ses
 
