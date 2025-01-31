@@ -26,4 +26,4 @@ MEIs:
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
 
 dev:
-  num_models: 5 # number of models to run, which are then used in the ensemble. Max: 5.
+  num_models: 1 # number of models to run, which are then used in the ensemble. Max: 5.

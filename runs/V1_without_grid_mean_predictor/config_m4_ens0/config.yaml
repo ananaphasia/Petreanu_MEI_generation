@@ -34,13 +34,13 @@ model_config:
   hidden_kern: 10
   hidden_channels: 64
   depth_separable: True
-  grid_mean_predictor:
-    type: cortex
-    input_dimensions: 2
-    hidden_layers: 4
-    hidden_features: 20
-    nonlinearity: ReLU
-    final_tanh: True
+  grid_mean_predictor: null
+    # type: cortex
+    # input_dimensions: 2
+    # hidden_layers: 4
+    # hidden_features: 20
+    # nonlinearity: ReLU
+    # final_tanh: True
   init_sigma: 0.14
   init_mu_range: 0.8
   gauss_type: full
