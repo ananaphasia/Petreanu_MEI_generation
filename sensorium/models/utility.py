@@ -47,7 +47,6 @@ def prepare_grid(grid_mean_predictor, dataloaders, **kwargs):
                     k: torch.load(os.path.join(input_path, 
                                     k.split('-')[0], # eg, LPE10885
                                     '_'.join(k.split('-')[1].split('_')[1:]), # eg, 2020_03_20
-                                    f"{k}_grid.npy",
                                     'meta', 'neurons',
                                     'rf_data.pt'
                                     ) ).cpu().detach().numpy()[:, :input_dim]

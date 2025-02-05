@@ -109,7 +109,7 @@ class MultiReadoutSharedParametersBase(MultiReadoutBase):
         readout_kwargs = kwargs.copy()
 
         if grid_mean_predictor:
-            if grid_mean_predictor_type == "cortex":
+            if grid_mean_predictor_type == "cortex" or grid_mean_predictor_type == "RF":
                 readout_kwargs["source_grid"] = readout_kwargs["source_grids"][data_key]
                 readout_kwargs["grid_mean_predictor"] = grid_mean_predictor
             else:
