@@ -692,6 +692,9 @@ for sess, sess_obj in zip(session_list, sessions):
     # Save rf_data
     out_mat = rf_data.to_numpy()
 
+    # assert there are no nan values
+    assert not np.isnan(out_mat).any(), f'There are still NaN values in the rf_data for session {sess[0]}/{sess[1]}'
+
     # Reshape to (1, N, 1, 2)
     # out_mat = np.expand_dims(out_mat, axis=0)
     # out_mat = np.expand_dims(out_mat, axis=2)
