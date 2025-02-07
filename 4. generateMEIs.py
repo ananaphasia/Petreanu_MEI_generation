@@ -274,60 +274,60 @@ mei_generation_shape.extend(list(mei_shape))
 
 print(f'Generating MEIs with the following shape: {mei_generation_shape}')
 print(f'Generating {len(final_selection)} best MEIs out of {len(final_neurons)} neurons selected')
-for i in tqdm(final_selection):
-    mei_out, _, _ = gradient_ascent(ensemble, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape), model_config=pupil_center_config) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
-    meis.append(mei_out)
-# torch.save(meis, "MEIs/meis.pth")
-torch.save(meis, f'{RUN_FOLDER}/meis_top{len(final_selection)}_ensemble.pth')
+# for i in tqdm(final_selection):
+#     mei_out, _, _ = gradient_ascent(ensemble, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape), model_config=pupil_center_config) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
+#     meis.append(mei_out)
+# # torch.save(meis, "MEIs/meis.pth")
+# torch.save(meis, f'{RUN_FOLDER}/meis_top{len(final_selection)}_ensemble.pth')
 
-# Save MEIs in Bonsai format
-print('Saving MEIs in Bonsai format')
-os.makedirs(f'{RUN_FOLDER}/MEI_Bonsai_images', exist_ok=True)
+# # Save MEIs in Bonsai format
+# print('Saving MEIs in Bonsai format')
+# os.makedirs(f'{RUN_FOLDER}/MEI_Bonsai_images', exist_ok=True)
 
-for imei, mei_out in enumerate(meis):
-    mei_out = np.array(mei_out[0, 0, ...])
-    mei_out = (mei_out + 1) / 2
-    mei_out = np.concatenate((np.full(mei_shape, 0.5),mei_out), axis=1) #add left part of the screen
-    mei_out = (mei_out * 255).astype(np.uint8)
-    # np.save(os.path.join(outdir,'%d.jpg' % imei),mei_out)
-    img = Image.fromarray(mei_out)
-    img.save(os.path.join(f'{RUN_FOLDER}/MEI_Bonsai_images','%s.jpg' % cell_ids[imei]), format='JPEG')
+# for imei, mei_out in enumerate(meis):
+#     mei_out = np.array(mei_out[0, 0, ...])
+#     mei_out = (mei_out + 1) / 2
+#     mei_out = np.concatenate((np.full(mei_shape, 0.5),mei_out), axis=1) #add left part of the screen
+#     mei_out = (mei_out * 255).astype(np.uint8)
+#     # np.save(os.path.join(outdir,'%d.jpg' % imei),mei_out)
+#     img = Image.fromarray(mei_out)
+#     img.save(os.path.join(f'{RUN_FOLDER}/MEI_Bonsai_images','%s.jpg' % cell_ids[imei]), format='JPEG')
 
-    if run_config['MEIs']['also_output_to_local']:
-        img.save(os.path.join(run_config['MEIs']['local_output_folder'],'%s.jpg' % cell_ids[imei]), format='JPEG')
+#     if run_config['MEIs']['also_output_to_local']:
+#         img.save(os.path.join(run_config['MEIs']['local_output_folder'],'%s.jpg' % cell_ids[imei]), format='JPEG')
 
-fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-fig.suptitle("Mouse MEIs", y=0.91, fontsize=50)
-for i in tqdm(range(8)):
-    for j in range(num_models):
-        index = i * 5 + j
-        # axes[i, j].imshow(meis[index].reshape(4, 68, 135).mean(0), cmap="gray")#, vmin=-1, vmax=1)
-        axes[i, j].imshow(meis[index][0, 0, ...], cmap="gray")#, vmin=-1, vmax=1)
-        axes[i, j].spines['top'].set_color('black')
-        axes[i, j].spines['bottom'].set_color('black')
-        axes[i, j].spines['left'].set_color('black')
-        axes[i, j].spines['right'].set_color('black')
-        axes[i, j].spines['top'].set_linewidth(1)
-        axes[i, j].spines['bottom'].set_linewidth(1)
-        axes[i, j].spines['left'].set_linewidth(1)
-        axes[i, j].spines['right'].set_linewidth(1)
-        axes[i, j].set_xticks([])
-        axes[i, j].set_yticks([])
-plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
-# os.makedirs("Plots", exist_ok=True)
-# plt.savefig("Plots/MouseMEIsTop200.png", dpi=300)
-os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
-plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40.png', dpi=300)
-# plt.show()
+# fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
+# fig.suptitle("Mouse MEIs", y=0.91, fontsize=50)
+# for i in tqdm(range(8)):
+#     for j in range(num_models):
+#         index = i * 5 + j
+#         # axes[i, j].imshow(meis[index].reshape(4, 68, 135).mean(0), cmap="gray")#, vmin=-1, vmax=1)
+#         axes[i, j].imshow(meis[index][0, 0, ...], cmap="gray")#, vmin=-1, vmax=1)
+#         axes[i, j].spines['top'].set_color('black')
+#         axes[i, j].spines['bottom'].set_color('black')
+#         axes[i, j].spines['left'].set_color('black')
+#         axes[i, j].spines['right'].set_color('black')
+#         axes[i, j].spines['top'].set_linewidth(1)
+#         axes[i, j].spines['bottom'].set_linewidth(1)
+#         axes[i, j].spines['left'].set_linewidth(1)
+#         axes[i, j].spines['right'].set_linewidth(1)
+#         axes[i, j].set_xticks([])
+#         axes[i, j].set_yticks([])
+# plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
+# # os.makedirs("Plots", exist_ok=True)
+# # plt.savefig("Plots/MouseMEIsTop200.png", dpi=300)
+# os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
+# plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40.png', dpi=300)
+# # plt.show()
 
 for i, model in enumerate(model_list):
     model = model.eval()
     model_list[i] = model
 
 for model_idx, model in enumerate(model_list):
-    print(f"Model {model_idx}")
+    print(f"Generating MEIs for model {model_idx}")
     meis = []
-    for i in tqdm(final_selection):
+    for i in tqdm(final_selection[:15]):
         mei_out, _, _ = gradient_ascent(model, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape)) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
         meis.append(mei_out)
     # torch.save(meis, f"MEIs/meis_model_{model_idx}.pth")

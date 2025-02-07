@@ -20,10 +20,10 @@ MEIs:
   # data_key: 'LPE10885-LPE10885_2023_10_20-0' # format: session_id-session_id_date[YYYY_MM_DD]-0
   session_id: 'LPE10885' # For which session id to generate MEIs. Currently set up to only do one at a time.
   session_date: '2023_10_20' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
-  tier: 'all' # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
+  tier: 'test' # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
   also_output_to_local: False # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
   local_output_folder: 'T:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/'
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
 
 dev:
-  num_models: 1 # number of models to run, which are then used in the ensemble. Max: 5.
+  num_models: 5 # number of models to run, which are then used in the ensemble. Max: 5.
