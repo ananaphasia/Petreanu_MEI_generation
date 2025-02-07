@@ -358,9 +358,9 @@ for model_idx, model in enumerate(model_list):
 for k in range(num_models):
     # meis = torch.load(f"MEIs/meis_model_{k}.pth")
     meis = torch.load(f'{RUN_FOLDER}/meis_model_{k}.pth')
-    fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
+    fig, axes = plt.subplots(3,5, figsize=(20,20), dpi=300)
     fig.suptitle(f"Mouse MEIs model {k}", y=0.91, fontsize=50)
-    for i in tqdm(range(8)):
+    for i in tqdm(range(3)):
         for j in range(num_models):
             index = i * 5 + j
             axes[i, j].imshow(meis[index].reshape(mei_generation_shape[1:])[0, :, :], cmap="gray")#, vmin=-1, vmax=1)
@@ -392,9 +392,9 @@ meis_list = torch.stack(meis_list, dim=0)
 
 avg_meis = meis_list.mean(dim=0)
 
-fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
+fig, axes = plt.subplots(3,5, figsize=(20,20), dpi=300)
 fig.suptitle("Mouse MEIs Average", y=0.91, fontsize=50)
-for i in tqdm(range(8)):
+for i in tqdm(range(3)):
     for j in range(num_models):
         index = i * 5 + j
         axes[i, j].imshow(avg_meis[index][0, 0, :, :], cmap="gray")#, vmin=-1, vmax=1)
