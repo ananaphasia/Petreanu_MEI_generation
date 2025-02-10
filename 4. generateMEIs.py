@@ -45,6 +45,8 @@ area_of_interest = run_config['data']['area_of_interest']
 tier = run_config['MEIs']['tier']
 mei_shape = run_config['MEIs']['shape']
 num_models = run_config['dev']['num_models']
+session_id = run_config['MEIs']['session_id']
+session_date = run_config['MEIs']['session_date']
 
 print(f'Starting MEI generation for {RUN_NAME}')
 
@@ -122,8 +124,6 @@ print("Getting signal correlations")
 correlation_to_average = get_signal_correlations(ensemble, dataloaders, tier='test', device='cuda', as_dict=True)
 
 df_cta = get_df_for_scores(session_dict=correlation_to_average, measure_attribute="Correlation to Average")
-
-data_key = 'LPE10885-LPE10885_2023_10_20-0'
 
 config_mei = dict(
     initial={"path": "mei.initial.RandomNormal"},
