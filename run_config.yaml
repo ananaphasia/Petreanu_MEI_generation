@@ -1,6 +1,6 @@
 ## Configuration file for the run
 
-RUN_NAME: V1_init_w_mean # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_NAME: MOL_test_LPE11086_2024_01_09 # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
 ASK_FOR_CONFIRMATION: False # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
 RUN_FOLDER_OVERWRITE: None # None or string with folder where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
 
@@ -14,16 +14,17 @@ data:
   sessions_to_keep: 'all' # 'all' or list of sessions to keep, eg [['LPE10885', '2023_10_20'], ...]
 
   # Preprocessing
-  INPUT_FOLDER: '../sensorium/notebooks/data/IM_prezipped' # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
+  #INPUT_FOLDER: '../sensorium/notebooks/data/IM_prezipped' # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
+  INPUT_FOLDER: 'D:/Procdata/IM' # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
 
 MEIs:
   # data_key: 'LPE10885-LPE10885_2023_10_20-0' # format: session_id-session_id_date[YYYY_MM_DD]-0
-  session_id: 'LPE10885' # For which session id to generate MEIs. Currently set up to only do one at a time.
-  session_date: '2023_10_20' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
+  session_id: 'LPE10883' # For which session id to generate MEIs. Currently set up to only do one at a time.
+  session_date: '2023_10_31' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
   tier: 'test' # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
-  also_output_to_local: False # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
-  local_output_folder: 'T:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/'
+  also_output_to_local: True # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
+  local_output_folder: 'D:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/'
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
 
 dev:
-  num_models: 5 # number of models to run, which are then used in the ensemble. Max: 5.
+  num_models: 1 # number of models to run, which are then used in the ensemble. Max: 5.
