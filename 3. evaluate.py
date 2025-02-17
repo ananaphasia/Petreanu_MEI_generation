@@ -13,6 +13,12 @@ from nnfabrik.builder import get_data, get_model
 from sensorium.models.ensemble import EnsemblePrediction
 from sensorium.utility import get_correlations
 from sensorium.utility.measure_helpers import get_df_for_scores
+from loaddata.session_info import load_sessions
+from utils.plotting_style import *  # get all the fixed color schemes
+from utils.imagelib import load_natural_images
+from loaddata.get_data_folder import get_local_drive
+from utils.pair_lib import compute_pairwise_anatomical_distance
+from utils.rf_lib import *
 
 # Set working directory to root of repo
 current_path = os.getcwd()
@@ -34,6 +40,7 @@ RUN_NAME = run_config['RUN_NAME'] # MUST be set. Creates a subfolder in the runs
 RUN_FOLDER = run_config['RUN_FOLDER_OVERWRITE'] if run_config['RUN_FOLDER_OVERWRITE'] is not None and run_config['RUN_FOLDER_OVERWRITE'] != 'None' else f'runs/{RUN_NAME}'
 area_of_interest = run_config['data']['area_of_interest']
 INPUT_FOLDER = run_config['data']['INPUT_FOLDER']
+sessions_to_keep = run_config['data']['sessions_to_keep']
 num_models = run_config['dev']['num_models']
 
 print(f'Starting evaluation for {RUN_NAME} with area of interest {area_of_interest}')
@@ -65,6 +72,40 @@ folders = [os.path.join(folder, name) for folder in folders for name in os.listd
     folder) if os.path.isdir(os.path.join(folder, name)) and not "merged_data" in name]
 folders = [x.replace("\\", "/") for x in folders]
 print(folders)
+
+try: 
+    session_folders
+except NameError:
+    # First level
+    session_folders = [os.path.join(INPUT_FOLDER, name) for name in os.listdir(
+        INPUT_FOLDER) if os.path.isdir(os.path.join(INPUT_FOLDER, name)) and not "merged_data" in name]
+    session_folders = [x.replace("\\", "/") for x in session_folders]
+    # Second level
+    files = [[session_folder, os.path.join(session_folder, name).replace('\\', '/')] for session_folder in session_folders for name in os.listdir(
+        session_folder) if os.path.isdir(os.path.join(session_folder, name)) and not "merged_data" in name]
+    # only get last value after /
+    session_list = [[session_folder.split("/")[-1], name.split("/")[-1]]
+                    for session_folder, name in files]
+
+    # drop ['LPE10919', '2023_11_08'] because the data is not converted yet
+    session_list = [x for x in session_list if x != ['LPE10919', '2023_11_08']]
+
+if sessions_to_keep != 'all':
+    session_list = [x for x in session_list if x in sessions_to_keep]
+
+session_list = np.array(session_list)
+
+sessions, nSessions = load_sessions(protocol='IM', session_list=session_list, data_folder = INPUT_FOLDER)
+
+for ises in range(nSessions):    # Load proper data and compute average trial responses:
+    sessions[ises].load_respmat(calciumversion='deconv', keepraw=False)
+
+sessions = compute_pairwise_anatomical_distance(sessions)
+sessions = smooth_rf(sessions,radius=75,rf_type='Fneu')
+sessions = exclude_outlier_rf(sessions) 
+sessions = replace_smooth_with_Fsig(sessions) 
+
+# raise Exception('stop here')
 
 dataset_fn = config['dataset_fn']  # 'sensorium.datasets.static_loaders'
 dataset_config = {'paths': folders,  # filenames,
@@ -564,50 +605,94 @@ for dataset_name_full in df['dataset_name_full'].unique():
 
     np.save(f'{RUN_FOLDER}/results/neuron_stats_{dataset_name_full}.npy', neuron_stats)
 
-# if true_idx:
-#     df_trunc = df.loc[df['dataset_name_full'] == 'LPE10885-LPE10885_2023_10_20-0']
-#     for i, model in enumerate(model_list):
-#         mus[i] = model.readout._modules['LPE10885-LPE10885_2023_10_20-0'].mu.detach().cpu().numpy().reshape(-1, 2)
-#         sigmas[i] = model.readout._modules['LPE10885-LPE10885_2023_10_20-0'].sigma.detach().cpu().numpy().reshape(-1, 2, 2)
-#         jitters[i] = model.readout._modules['LPE10885-LPE10885_2023_10_20-0'].jitter.detach().cpu().numpy().reshape(-1, 2)
-#         locs[i] = mus[i] + jitters[i]
+    # Plot RFs
 
-#     # raise NotImplementedError("Save as np arrays instead of CSV")
+    loc_columns = ['loc']
+    loc_columns.extend(f'loc_{i}' for i in range(num_models))
 
-#     df_neuron_stats = pd.DataFrame(columns=['dataset', 'neuron', 'mean', 'cov', 'mean_std', 'cov_std'] + [f'mean_{i}' for i in range(num_models)] + [f'cov_{i}' for i in range(num_models)])
+    mergedata = pd.DataFrame(np.array(g['loc'].values.tolist(), dtype=float), columns=['rf_az_Ftwin', 'rf_el_Ftwin',])
+    for i in range(5):
+        temp_df = pd.DataFrame(np.array(g[f'loc_{i}'].values.tolist(), dtype=float), columns=[f'rf_az_Ftwin_{i}', f'rf_el_Ftwin_{i}'])
+        mergedata = pd.concat([mergedata, temp_df], axis=1)
 
-#     df_neuron_stats['dataset'] = df_trunc['dataset']
-#     df_neuron_stats['neuron'] = np.repeat(np.arange(num_neurons), len(df_trunc['dataset'].unique()))
-#     for i in range(num_models):
-#         df_neuron_stats[f'mean_{i}'] = list(mus[i].round(2))
-#         df_neuron_stats[f'cov_{i}'] = list(sigmas[i].round(2))
-#         df_neuron_stats[f'jitter_{i}'] = list(jitters[i].round(2))
-#         df_neuron_stats[f'loc_{i}'] = list(locs[i].round(2))
+    mergedata['cell_id'] = neuron_stats['cell_id']
+    sessions[ises].celldata = sessions[ises].celldata.merge(mergedata, on='cell_id')
+    sessions[ises].celldata['rf_r2_Ftwin'] = 0
+    sessions[ises].celldata['rf_az_Ftwin'] = (sessions[ises].celldata['rf_az_Ftwin']+0.5)*135
+    sessions[ises].celldata['rf_el_Ftwin'] = (sessions[ises].celldata['rf_el_Ftwin']+0.5)*62 - 53
+    for i in range(5):
+        sessions[ises].celldata[f'rf_az_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_az_Ftwin_{i}'] + 0.5) * 135
+        sessions[ises].celldata[f'rf_el_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_el_Ftwin_{i}'] + 0.5) * 62 - 53
+    areas = [area_of_interest]
+    spat_dims = ['az', 'el']
+    clrs_areas  = get_clr_areas(areas)
+    r2_thr       = np.inf
+    rf_type      = 'F'
+    rf_type_twin = 'Ftwin'
+    fig,axes     = plt.subplots(len(areas),len(spat_dims),figsize=(6,6))
+    # print(sessions[0].celldata.columns)
+    for iarea,area in enumerate(areas):
+        for ispat_dim,spat_dim in enumerate(spat_dims):
+            idx         = (sessions[0].celldata['roi_name'] == area) & (sessions[0].celldata['rf_r2_' + rf_type] < r2_thr)
+            x = sessions[0].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
+            y = sessions[0].celldata[f'rf_{spat_dim}_{rf_type_twin}'][idx]
 
-#     df_neuron_stats['mean'] = list(mus.mean(axis=0).round(2))
-#     df_neuron_stats['cov'] = list(sigmas.mean(axis=0).round(2))
-#     df_neuron_stats['jitter'] = list(jitters.mean(axis=0).round(2))
-#     df_neuron_stats['loc'] = list(locs.mean(axis=0).round(2))
+            sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
+            axes[iarea,ispat_dim].set_title(f'{area} {spat_dim}',fontsize=12)
+            axes[iarea,ispat_dim].set_xlabel('Sparse Noise (deg)',fontsize=9)
+            axes[iarea,ispat_dim].set_ylabel(f'Dig. Twin Model',fontsize=9)
+            # if spat_dim == 'az':
+            #     axes[iarea,ispat_dim].set_xlim([-50,135])
+            #     axes[iarea,ispat_dim].set_ylim([-50,135])
+            #     # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
+            # elif spat_dim == 'el':
+            #     axes[iarea,ispat_dim].set_xlim([-150.2,150.2])
+            #     axes[iarea,ispat_dim].set_ylim([-150.2,150.2])
+                # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
+            idx = (~np.isnan(x)) & (~np.isnan(y))
+            x =  x[idx]
+            y =  y[idx]
+            if len(x) > 0:
+                axes[iarea,ispat_dim].set_xlim([int(min(x) - 10), int(max(x) + 10)])
+            if len(y) > 0:
+                axes[iarea,ispat_dim].set_ylim([int(min(y) - 10), int(max(y) + 10)])
+            # axes[iarea,ispat_dim].text(x=0,y=0.1,s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
+            if len(x) > 0 and len(y) > 0:
+                axes[iarea,ispat_dim].text(x=int(min(x) - 5),y=int(min(y) - 5),s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
+    fig.suptitle(f'Mean of 5 models')
+    plt.tight_layout()
+    fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}.png'), format='png')
 
-#     df_neuron_stats['mean_std'] = list(mus.std(axis=0).round(2))
-#     df_neuron_stats['cov_std'] = list(sigmas.std(axis=0).round(2))
-#     df_neuron_stats['jitter_std'] = list(jitters.std(axis=0).round(2))
-#     df_neuron_stats['loc_std'] = list(locs.std(axis=0).round(2))
+    for i in range(5):
+        fig,axes     = plt.subplots(2,2,figsize=(6,6))
+        for iarea,area in enumerate(areas):
+            for ispat_dim,spat_dim in enumerate(spat_dims):
+                idx         = (sessions[0].celldata['roi_name'] == area) & (sessions[0].celldata['rf_r2_' + rf_type] < r2_thr)
+                x = sessions[0].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
+                y = sessions[0].celldata[f'rf_{spat_dim}_{rf_type_twin}_{i}'][idx]
 
-#     df_neuron_stats['single_trial_correlation'] = df_trunc['Single Trial Correlation']
-#     df_neuron_stats['cell_id'] = df_trunc['cell_id']
-
-#     # df_neuron_stats.to_csv('notebooks/submission_m4/results/neuron_stats.csv', index = False)
-#     df_neuron_stats.to_csv(f'{RUN_FOLDER}/results/neuron_stats.csv', index = False)
-
-# else:
-#     print("LPE10885/2023_10_20 not found in folders")
-
-
-# df_neuron_stats
-
-# df
-
-# Get fit parameters from the readout, ie x and y coordinates of spatial mask
-
-
+                sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
+                axes[iarea,ispat_dim].set_title(f'{area} {spat_dim} Model {i}',fontsize=12)
+                axes[iarea,ispat_dim].set_xlabel('Sparse Noise (deg)',fontsize=9)
+                axes[iarea,ispat_dim].set_ylabel(f'Dig. Twin Model {i}',fontsize=9)
+                # if spat_dim == 'az':
+                #     axes[iarea,ispat_dim].set_xlim([-50,135])
+                #     axes[iarea,ispat_dim].set_ylim([-50,135])
+                #     # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
+                # elif spat_dim == 'el':
+                #     axes[iarea,ispat_dim].set_xlim([-150.2,150.2])
+                #     axes[iarea,ispat_dim].set_ylim([-150.2,150.2])
+                #     # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
+                idx = (~np.isnan(x)) & (~np.isnan(y))
+                x =  x[idx]
+                y =  y[idx]
+                if len(x) > 0:
+                    axes[iarea,ispat_dim].set_xlim([int(min(x) - 10), int(max(x) + 10)])
+                if len(y) > 0:
+                    axes[iarea,ispat_dim].set_ylim([int(min(y) - 10), int(max(y) + 10)])
+                # axes[iarea,ispat_dim].text(x=0,y=0.1,s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
+                if len(x) > 0 and len(y) > 0:
+                    axes[iarea,ispat_dim].text(x=int(min(x) - 5),y=int(min(y) - 5),s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
+        plt.suptitle(f'Model {i}')
+        plt.tight_layout()
+        fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}_model_{i}.png'), format='png')
