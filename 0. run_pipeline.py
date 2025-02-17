@@ -30,12 +30,27 @@ current_path = os.getcwd()
 run_config = read_config('run_config.yaml') # Must be set
 areas = run_config['data']['areas_of_interest']
 
+class NullRepresenter(yaml.representer.SafeRepresenter):
+    def represent_none(self, value):
+        return self.represent_scalar('tag:yaml.org,2002:null', 'null')  # Represent None as 'null'
+
+# Custom representer for True/False (with proper casing)
+class BoolRepresenter(yaml.representer.SafeRepresenter):
+    def represent_bool(self, value):
+        return self.represent_scalar('tag:yaml.org,2002:bool', str(value))  # Convert True/False to 'True'/'False'
+    
+yaml_config = yaml.YAML()
+yaml_config.representer.add_representer(type(None), NullRepresenter.represent_none)
+yaml_config.representer.add_representer(bool, BoolRepresenter.represent_bool)
+
 for i, area in enumerate(areas):
+
+    # Update run_config.yaml based on which area is being investigated
 
     run_config['current_vals']['RUN_NAME'] = f'{area}{"_" if area is not None else ""}{run_config["RUN_NAME"]}'
 
     RUN_FOLDER_OVERWRITE = run_config['RUN_FOLDER_OVERWRITE']
-    if RUN_FOLDER_OVERWRITE == 'None':
+    if RUN_FOLDER_OVERWRITE == 'None' or RUN_FOLDER_OVERWRITE is None:
         RUN_FOLDER = f"runs/{run_config['current_vals']['RUN_NAME']}"
     elif isinstance(RUN_FOLDER_OVERWRITE, str):
         RUN_FOLDER = f'{RUN_FOLDER_OVERWRITE}_{area}'
@@ -49,11 +64,25 @@ for i, area in enumerate(areas):
     run_config['current_vals']['area_id'] = i
     run_config['current_vals']['data']['area_of_interest'] = area
 
-    yaml_config = yaml.YAML()
     with open('run_config.yaml', 'w') as file:
         yaml_config.dump(run_config, file)
 
-    raise Exception
+    # Update each model's configs to set values for V1 and PM max jitter
+
+    for m in range(run_config['dev']['num_models']):
+        config_file = os.path.join('model_configs', f'config_m4_ens{m}.yaml')
+        config = read_config(config_file)
+
+        if area == 'V1':
+            config['model_config']['max_jitter'] = 0.052
+        elif area == 'PM':
+            config['model_config']['max_jitter'] = 0.111
+        else:
+            print(f'WARNING: Setting max_jitter to that of PM, 0.111, since current area {area} is not V1 or PM')
+            config['model_config']['max_jitter'] = 0.111
+
+        with open(config_file, 'w') as file:
+            yaml_config.dump(config, file)
 
     # Run each script in the list
     for file in files_list:

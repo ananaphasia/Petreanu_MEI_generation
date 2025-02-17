@@ -2,16 +2,16 @@
 
 RUN_NAME: test_no_grid_mean_predictor # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
   # Also, prepends the current area_of_interest + '_'.
-ASK_FOR_CONFIRMATION: false # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
-RUN_FOLDER_OVERWRITE: None # None, string, or list of strings with folders where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
+ASK_FOR_CONFIRMATION: False # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
+RUN_FOLDER_OVERWRITE: null # null (or empty string), string, or list of strings with folders where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
   # If string: area appended to the end of the string. If list: has to be one entry per areas_of_interest.
 
 model:
-  init_w_mean_activity: false # True or False. If True, will linearly estimate spike trigger estimate and, for each neuron, will calculate the linear RFs. Will init neuronal biases with this. If False, will init neuronal biases with 0.
+  init_w_mean_activity: False # True or False. If True, will linearly estimate spike trigger estimate and, for each neuron, will calculate the linear RFs. Will init neuronal biases with this. If False, will init neuronal biases with 0.
 
 # Data parameters
 data:
-  keep_behavioral_info: false
+  keep_behavioral_info: False
   area_of_interest: V1
   areas_of_interest: [V1, PM]     # List of which runs to do. None for all neurons, 'PM' for only PM neurons, 'V1' for only V1 neurons. Will likely fail with None value set.
   sessions_to_keep: all   # 'all' or list of sessions to keep, eg [['LPE10885', '2023_10_20'], ...]
@@ -27,7 +27,7 @@ MEIs:
   session_id: LPE11086   # For which session id to generate MEIs. Currently set up to only do one at a time.
   session_date: '2024_01_09' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
   tier: test   # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
-  also_output_to_local: true # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
+  also_output_to_local: True # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
   local_output_folder: D:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
 
