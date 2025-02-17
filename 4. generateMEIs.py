@@ -45,6 +45,8 @@ area_of_interest = run_config['data']['area_of_interest']
 tier = run_config['MEIs']['tier']
 mei_shape = run_config['MEIs']['shape']
 num_models = run_config['dev']['num_models']
+num_meis = run_config['MEIs']['num_meis']
+num_labeled_cells = run_config['MEIs']['num_labeled_cells']
 session_id = run_config['MEIs']['session_id']
 session_date = run_config['MEIs']['session_date']
 
@@ -228,7 +230,7 @@ for i in selected_neurons:
     final_neurons.append(i)
     neurons_to_exclude.extend(np.where(np.linalg.norm(celldata[['xloc', 'yloc', 'depth']].values - celldata[['xloc', 'yloc', 'depth']].values[i], axis=1) < 20)[0])
 
-# 5. Select max 150 best neurons of which at least 10 are labeled
+# 5. Select max num_meis best neurons of which at least 10 are labeled
 celldata['index_reset'] = np.arange(len(celldata))
 final_neurons_labeled = celldata.iloc[final_neurons].loc[(celldata['redcell'] == True)]['index_reset'].values
 
@@ -239,23 +241,23 @@ final_selection = []
 labeled_count = 0
 
 for i in final_neurons:
-    if len(final_selection) >= 150:
+    if len(final_selection) >= num_meis:
         break
     if i in final_neurons_labeled:
         labeled_count += 1
     final_selection.append(i)
 
-if labeled_count < 10:
-    additional_needed = 10 - labeled_count
+if labeled_count < num_labeled_cells:
+    additional_needed = num_labeled_cells - labeled_count
     remaining_labeled = [i for i in final_neurons_labeled if i not in final_selection]
 
     final_selection.extend(remaining_labeled[:additional_needed])
 
-# 6. Assert that at least 10 labeled neurons are selected
+# 6. Assert that at least num_labeled_cells labeled neurons are selected
 
 # assert celldata.loc[final_neurons, 'redcell'].sum() >= 10, f"Less than 10 labeled neurons selected, {celldata.loc[final_neurons, 'redcell'].sum()} selected"
-if celldata.iloc[final_selection]['redcell'].sum() < 10:
-    print(f"WARNING: Less than 10 labeled neurons selected, {celldata.iloc[final_neurons]['redcell'].sum()} selected for MEI generation")
+if celldata.iloc[final_selection]['redcell'].sum() < num_labeled_cells:
+    print(f"WARNING: Less than {num_labeled_cells} labeled neurons selected, {celldata.iloc[final_neurons]['redcell'].sum()} selected for MEI generation")
 else:
     print(f"Selected {celldata.iloc[final_selection]['redcell'].sum()} labeled neurons for MEI generation")
 
