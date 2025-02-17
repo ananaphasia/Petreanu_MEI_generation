@@ -17,8 +17,8 @@ sys.path.append(current_path)
 
 run_config = read_config('run_config.yaml') # Must be set
 
-RUN_NAME = run_config['RUN_NAME'] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
-RUN_FOLDER = run_config['RUN_FOLDER_OVERWRITE'] if run_config['RUN_FOLDER_OVERWRITE'] is not None and run_config['RUN_FOLDER_OVERWRITE'] != 'None' else f'runs/{RUN_NAME}'
+RUN_NAME = run_config['current_vals']['RUN_NAME'] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_FOLDER = run_config['current_vals']['RUN_FOLDER']
 num_models = run_config['dev']['num_models']
 
 print(f'Starting training for {RUN_NAME}')

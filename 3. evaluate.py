@@ -36,9 +36,9 @@ print('Working directory:', os.getcwd())
 
 run_config = read_config('run_config.yaml') # Must be set
 
-RUN_NAME = run_config['RUN_NAME'] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
-RUN_FOLDER = run_config['RUN_FOLDER_OVERWRITE'] if run_config['RUN_FOLDER_OVERWRITE'] is not None and run_config['RUN_FOLDER_OVERWRITE'] != 'None' else f'runs/{RUN_NAME}'
-area_of_interest = run_config['data']['area_of_interest']
+RUN_NAME = run_config['current_vals']['RUN_NAME'] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_FOLDER = run_config['current_vals']['RUN_FOLDER']
+area_of_interest = run_config['current_vals']['data']['area_of_interest']
 INPUT_FOLDER = run_config['data']['INPUT_FOLDER']
 sessions_to_keep = run_config['data']['sessions_to_keep']
 num_models = run_config['dev']['num_models']
@@ -226,6 +226,7 @@ for k in dataloaders[tier]:
     cov_noise = np.var(respmat,axis=1) - cov_signal
     SNR = cov_signal / cov_noise
 
+    plt.clf() # Clears any previous figures
     plt.hist(SNR, bins=np.arange(-0.1,1.5,0.05))
     # plt.show()
     os.makedirs(f'{RUN_FOLDER}/results', exist_ok=True)
@@ -610,9 +611,9 @@ for dataset_name_full in df['dataset_name_full'].unique():
     loc_columns = ['loc']
     loc_columns.extend(f'loc_{i}' for i in range(num_models))
 
-    mergedata = pd.DataFrame(np.array(g['loc'].values.tolist(), dtype=float), columns=['rf_az_Ftwin', 'rf_el_Ftwin',])
-    for i in range(5):
-        temp_df = pd.DataFrame(np.array(g[f'loc_{i}'].values.tolist(), dtype=float), columns=[f'rf_az_Ftwin_{i}', f'rf_el_Ftwin_{i}'])
+    mergedata = pd.DataFrame(list(neuron_stats['loc']), columns=['rf_az_Ftwin', 'rf_el_Ftwin',])
+    for i in range(num_models):
+        temp_df = pd.DataFrame(list(neuron_stats[f'loc_{i}']), columns=[f'rf_az_Ftwin_{i}', f'rf_el_Ftwin_{i}'])
         mergedata = pd.concat([mergedata, temp_df], axis=1)
 
     mergedata['cell_id'] = neuron_stats['cell_id']
@@ -620,7 +621,7 @@ for dataset_name_full in df['dataset_name_full'].unique():
     sessions[ises].celldata['rf_r2_Ftwin'] = 0
     sessions[ises].celldata['rf_az_Ftwin'] = (sessions[ises].celldata['rf_az_Ftwin']+0.5)*135
     sessions[ises].celldata['rf_el_Ftwin'] = (sessions[ises].celldata['rf_el_Ftwin']+0.5)*62 - 53
-    for i in range(5):
+    for i in range(num_models):
         sessions[ises].celldata[f'rf_az_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_az_Ftwin_{i}'] + 0.5) * 135
         sessions[ises].celldata[f'rf_el_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_el_Ftwin_{i}'] + 0.5) * 62 - 53
     areas = [area_of_interest]
@@ -663,7 +664,7 @@ for dataset_name_full in df['dataset_name_full'].unique():
     plt.tight_layout()
     fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}.png'), format='png')
 
-    for i in range(5):
+    for i in range(num_models):
         fig,axes     = plt.subplots(2,2,figsize=(6,6))
         for iarea,area in enumerate(areas):
             for ispat_dim,spat_dim in enumerate(spat_dims):
