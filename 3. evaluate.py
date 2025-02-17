@@ -570,7 +570,13 @@ locs = np.zeros((5, num_neurons, 2))
 
 # model.readout._modules
 
-for dataset_name_full in df['dataset_name_full'].unique():
+areas = [area_of_interest]
+sig_thr = 0
+r2_thr  = np.inf
+# rf_type = 'Fsmooth'
+rf_type = 'Ftwin'
+
+for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique())):
     df_trunc = df.loc[df['dataset_name_full'] == dataset_name_full]
     num_neurons = df_trunc['cell_id'].nunique()
     
@@ -624,76 +630,10 @@ for dataset_name_full in df['dataset_name_full'].unique():
     for i in range(num_models):
         sessions[ises].celldata[f'rf_az_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_az_Ftwin_{i}'] + 0.5) * 135
         sessions[ises].celldata[f'rf_el_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_el_Ftwin_{i}'] + 0.5) * 62 - 53
-    areas = [area_of_interest]
-    spat_dims = ['az', 'el']
-    clrs_areas  = get_clr_areas(areas)
-    r2_thr       = np.inf
-    rf_type      = 'F'
-    rf_type_twin = 'Ftwin'
-    fig,axes     = plt.subplots(len(areas),len(spat_dims),figsize=(6,6))
-    # print(sessions[0].celldata.columns)
-    for iarea,area in enumerate(areas):
-        for ispat_dim,spat_dim in enumerate(spat_dims):
-            idx         = (sessions[0].celldata['roi_name'] == area) & (sessions[0].celldata['rf_r2_' + rf_type] < r2_thr)
-            x = sessions[0].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
-            y = sessions[0].celldata[f'rf_{spat_dim}_{rf_type_twin}'][idx]
 
-            sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
-            axes[iarea,ispat_dim].set_title(f'{area} {spat_dim}',fontsize=12)
-            axes[iarea,ispat_dim].set_xlabel('Sparse Noise (deg)',fontsize=9)
-            axes[iarea,ispat_dim].set_ylabel(f'Dig. Twin Model',fontsize=9)
-            # if spat_dim == 'az':
-            #     axes[iarea,ispat_dim].set_xlim([-50,135])
-            #     axes[iarea,ispat_dim].set_ylim([-50,135])
-            #     # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
-            # elif spat_dim == 'el':
-            #     axes[iarea,ispat_dim].set_xlim([-150.2,150.2])
-            #     axes[iarea,ispat_dim].set_ylim([-150.2,150.2])
-                # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
-            idx = (~np.isnan(x)) & (~np.isnan(y))
-            x =  x[idx]
-            y =  y[idx]
-            if len(x) > 0:
-                axes[iarea,ispat_dim].set_xlim([int(min(x) - 10), int(max(x) + 10)])
-            if len(y) > 0:
-                axes[iarea,ispat_dim].set_ylim([int(min(y) - 10), int(max(y) + 10)])
-            # axes[iarea,ispat_dim].text(x=0,y=0.1,s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
-            if len(x) > 0 and len(y) > 0:
-                axes[iarea,ispat_dim].text(x=int(min(x) - 5),y=int(min(y) - 5),s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
-    fig.suptitle(f'Mean of 5 models')
-    plt.tight_layout()
-    fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}.png'), format='png')
+    fig = plot_rf_plane(sessions[ises].celldata,r2_thr=r2_thr,rf_type=rf_type, dataset=dataset_name_full) 
+    fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'V1_PM_plane_TwinModel_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}.png'), format = 'png')
 
     for i in range(num_models):
-        fig,axes     = plt.subplots(2,2,figsize=(6,6))
-        for iarea,area in enumerate(areas):
-            for ispat_dim,spat_dim in enumerate(spat_dims):
-                idx         = (sessions[0].celldata['roi_name'] == area) & (sessions[0].celldata['rf_r2_' + rf_type] < r2_thr)
-                x = sessions[0].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
-                y = sessions[0].celldata[f'rf_{spat_dim}_{rf_type_twin}_{i}'][idx]
-
-                sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
-                axes[iarea,ispat_dim].set_title(f'{area} {spat_dim} Model {i}',fontsize=12)
-                axes[iarea,ispat_dim].set_xlabel('Sparse Noise (deg)',fontsize=9)
-                axes[iarea,ispat_dim].set_ylabel(f'Dig. Twin Model {i}',fontsize=9)
-                # if spat_dim == 'az':
-                #     axes[iarea,ispat_dim].set_xlim([-50,135])
-                #     axes[iarea,ispat_dim].set_ylim([-50,135])
-                #     # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
-                # elif spat_dim == 'el':
-                #     axes[iarea,ispat_dim].set_xlim([-150.2,150.2])
-                #     axes[iarea,ispat_dim].set_ylim([-150.2,150.2])
-                #     # axes[iarea,ispat_dim].set_ylim([-0.5,0.5])
-                idx = (~np.isnan(x)) & (~np.isnan(y))
-                x =  x[idx]
-                y =  y[idx]
-                if len(x) > 0:
-                    axes[iarea,ispat_dim].set_xlim([int(min(x) - 10), int(max(x) + 10)])
-                if len(y) > 0:
-                    axes[iarea,ispat_dim].set_ylim([int(min(y) - 10), int(max(y) + 10)])
-                # axes[iarea,ispat_dim].text(x=0,y=0.1,s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
-                if len(x) > 0 and len(y) > 0:
-                    axes[iarea,ispat_dim].text(x=int(min(x) - 5),y=int(min(y) - 5),s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
-        plt.suptitle(f'Model {i}')
-        plt.tight_layout()
-        fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}_model_{i}.png'), format='png')
+        fig = plot_rf_plane(sessions[ises].celldata,r2_thr=r2_thr,rf_type=f'{rf_type}', suffix=f'_{i}', dataset=dataset_name_full) 
+        fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'V1_PM_plane_TwinModel_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}_model_{i}.png'), format = 'png')

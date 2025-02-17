@@ -22,7 +22,7 @@ from utils.pair_lib import *
 from utils.tuning import mean_resp_image
 from loaddata.session import Session
 
-def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None):
+def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None, dataset=None):
     
     areas           = np.sort(celldata['roi_name'].unique())[::-1]
     # vars            = ['rf_azimuth','rf_elevation']
@@ -78,7 +78,7 @@ def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None):
                     axes[i,j].get_legend().remove()
                     # Remove the legend and add a colorbar (optional)
                     axes[i,j].figure.colorbar(sm,ax=axes[i,j],pad=0.02,label=vars[i])
-        plt.suptitle(f'Model{suffix}' if suffix else 'Mean of Models')
+        plt.suptitle(f'Dataset {dataset} Model{suffix}' if suffix else f'Dataset {dataset} Mean of Models')
         plt.tight_layout()
 
     return fig
