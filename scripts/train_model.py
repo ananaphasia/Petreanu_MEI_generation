@@ -48,6 +48,12 @@ save_location = args.save_location
 config_location = args.config_location
 data_location = args.data_location
 init_w_mean_activity = args.init_w_mean_activity
+if init_w_mean_activity == 'True':
+    init_w_mean_activity = True
+elif init_w_mean_activity == 'False':
+    init_w_mean_activity = False
+else:
+    raise ValueError(f'init_w_mean_activity argument must be "True" or "False", not {init_w_mean_activity}')
 
 save_folder = os.path.join( save_location, model_name )
 os.makedirs( save_folder, exist_ok=True )
