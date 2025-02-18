@@ -74,12 +74,15 @@ for i, area in enumerate(areas):
         config = read_config(config_file)
 
         if area == 'V1':
-            config['model_config']['max_jitter'] = 0.052
+            # config['model_config']['max_jitter'] = 0.052
+            config['model_config']['max_jitter'] = 0
         elif area == 'PM':
-            config['model_config']['max_jitter'] = 0.111
+            # config['model_config']['max_jitter'] = 0.111
+            config['model_config']['max_jitter'] = 0
         else:
-            print(f'WARNING: Setting max_jitter to that of PM, 0.111, since current area {area} is not V1 or PM')
-            config['model_config']['max_jitter'] = 0.111
+            print(f'WARNING: Setting max_jitter to that of PM, 0, since current area {area} is not V1 or PM')
+            # config['model_config']['max_jitter'] = 0.111
+            config['model_config']['max_jitter'] = 0
 
         with open(config_file, 'w') as file:
             yaml_config.dump(config, file)
