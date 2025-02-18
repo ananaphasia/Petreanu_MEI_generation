@@ -20,7 +20,7 @@ dataset_config:
   adjusted_normalization: True
   use_ensemble_tier: True
   ensemble_nr: 1
-  
+
 ### Model
 model_fn: sensorium.models.modulated_stacked_core_full_gauss_readout
 model_seed: 101
@@ -49,7 +49,7 @@ model_config:
   max_jitter_y: 0 # 15/67 = 0.22
   shifter: True
   with_modulator: True
-  modulator_type: 'HistoryStateGain'
+  modulator_type: HistoryStateGain
   modulator_params:
     include_gain: True
     gain_kernel_std: 30
@@ -77,7 +77,7 @@ trainer_config:
   lr_init: 0.009
   track_training: True
   disable_tqdm: True
-  
+
 verbose: 3
 save_csv: True
 save_predictions_npy: True
