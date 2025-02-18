@@ -19,6 +19,7 @@ from utils.imagelib import load_natural_images
 from loaddata.get_data_folder import get_local_drive
 from utils.pair_lib import compute_pairwise_anatomical_distance
 from utils.rf_lib import *
+import pickle as pkl
 
 # Set working directory to root of repo
 current_path = os.getcwd()
@@ -610,7 +611,9 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
         neuron_stats[f'jitter_{i}'] = jitters[i]
         neuron_stats[f'loc_{i}'] = locs[i]
 
-    np.save(f'{RUN_FOLDER}/results/neuron_stats_{dataset_name_full}.npy', neuron_stats)
+    # np.save(f'{RUN_FOLDER}/results/neuron_stats_{dataset_name_full}.npy', neuron_stats)
+    with open(f'{RUN_FOLDER}/results/neuron_stats_{dataset_name_full}.pkl', 'wb') as f:
+        pkl.dump(neuron_stats, f, protocol=pkl.HIGHEST_PROTOCOL)
 
     # Plot RFs
 
@@ -627,13 +630,14 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
     sessions[ises].celldata['rf_r2_Ftwin'] = 0
     sessions[ises].celldata['rf_az_Ftwin'] = (sessions[ises].celldata['rf_az_Ftwin']+0.5)*135
     sessions[ises].celldata['rf_el_Ftwin'] = (sessions[ises].celldata['rf_el_Ftwin']+0.5)*62 - 53
+
     for i in range(num_models):
         sessions[ises].celldata[f'rf_az_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_az_Ftwin_{i}'] + 0.5) * 135
         sessions[ises].celldata[f'rf_el_Ftwin_{i}'] = (sessions[ises].celldata[f'rf_el_Ftwin_{i}'] + 0.5) * 62 - 53
 
-    fig = plot_rf_plane(sessions[ises].celldata,r2_thr=r2_thr,rf_type=rf_type, dataset=dataset_name_full) 
-    fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'V1_PM_plane_TwinModel_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}.png'), format = 'png')
+    fig = plot_rf_plane(sessions[ises].celldata,r2_thr=r2_thr,rf_type=rf_type, dataset=ises, area_s_of_interest=area_of_interest) 
+    fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'{area_of_interest}_plane_TwinModel_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}.png'), format = 'png')
 
     for i in range(num_models):
-        fig = plot_rf_plane(sessions[ises].celldata,r2_thr=r2_thr,rf_type=f'{rf_type}', suffix=f'_{i}', dataset=dataset_name_full) 
-        fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'V1_PM_plane_TwinModel_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}_model_{i}.png'), format = 'png')
+        fig = plot_rf_plane(sessions[ises].celldata,r2_thr=r2_thr,rf_type=f'{rf_type}', suffix=f'_{i}', dataset=ises, area_s_of_interest=area_of_interest) 
+        fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'{area_of_interest}_plane_TwinModel_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}_model_{i}.png'), format = 'png')

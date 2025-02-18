@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Set of function used for analysis of mouse behavior in visual navigation task
-Author: Matthijs Oude Lohuis, Champalimaud Research
+Authors: Matthijs Oude Lohuis, Champalimaud Research; Anastasia Simonoff, BCCN Berlin
 2022-2025
 """
 
@@ -22,9 +22,18 @@ from utils.pair_lib import *
 from utils.tuning import mean_resp_image
 from loaddata.session import Session
 
-def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None, dataset=None):
+def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None, dataset=None, area_s_of_interest=None):
     
-    areas           = np.sort(celldata['roi_name'].unique())[::-1]
+    if area_s_of_interest:
+        if isinstance(area_s_of_interest, str):
+            areas = [area_s_of_interest]
+        elif isinstance(area_s_of_interest, list):
+            areas = area_s_of_interest
+        else:
+            raise ValueError(f'area_s_of_interest must be a list or a string, not {type(area_s_of_interest)}')
+    else:
+        areas           = np.sort(celldata['roi_name'].unique())[::-1]
+
     # vars            = ['rf_azimuth','rf_elevation']
     if not suffix:
         vars            = [f'rf_az_{rf_type}', f'rf_el_{rf_type}']
@@ -32,7 +41,14 @@ def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None, dataset=None):
         vars            = [f'rf_az_{rf_type}{suffix}', f'rf_el_{rf_type}{suffix}']
 
     # fig,axes        = plt.subplots(2,len(areas),figsize=(5*len(areas),10))
-    fig,axes        = plt.subplots(2,2,figsize=(5*len(areas),10)) # For V1 and PM even if not both areas are present
+    fig,axes        = plt.subplots(2,len(areas),figsize=(5*len(areas),10)) # For V1 and PM even if not both areas are present
+
+    # Flatten axes for easier indexing when areas is of length 1
+    if len(areas) == 0:
+        raise ValueError(f'Have to have at least one area, not {len(areas)}')
+    elif len(areas) == 1:
+        axes = np.expand_dims(axes, axis=1)  # Convert axes to 2D with shape (2, 1)
+
     if f'rf_az_{rf_type}' in celldata:
         for i in range(len(vars)): #for azimuth and elevation
             for j in range(len(areas)): #for areas
@@ -78,8 +94,10 @@ def plot_rf_plane(celldata,r2_thr=0,rf_type='Fneu', suffix=None, dataset=None):
                     axes[i,j].get_legend().remove()
                     # Remove the legend and add a colorbar (optional)
                     axes[i,j].figure.colorbar(sm,ax=axes[i,j],pad=0.02,label=vars[i])
-        plt.suptitle(f'Dataset {dataset} Model{suffix}' if suffix else f'Dataset {dataset} Mean of Models')
+        plt.suptitle(f'Dataset {dataset} Model {suffix}' if suffix else f'Dataset {dataset} Mean of Models')
         plt.tight_layout()
+    else:
+        raise ValueError(f'rf_az_{rf_type} not in celldata; columns are {celldata.columns}')
 
     return fig
 
