@@ -51,6 +51,8 @@ else:
     raise ValueError(f'RUN_NAME_S must be set as a string or a list, not {type(run_config["RUN_NAME_S"])}')
 
 for run_idx, run_name in enumerate(run_names):
+    if run_idx == 0:
+        continue
     for i, area in enumerate(areas):
 
         # Update run_config.yaml based on which area is being investigated

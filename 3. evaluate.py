@@ -564,20 +564,22 @@ for idx, folder in enumerate(folders):
 
 num_neurons = df_desc['Single Trial Correlation']['count'].iloc[true_idx].astype(int)
 
-mus = np.zeros((5, num_neurons, 2))
-sigmas = np.zeros((5, num_neurons, 2, 2))
-jitters = np.zeros((5, num_neurons, 2))
-locs = np.zeros((5, num_neurons, 2))
-
-# model.readout._modules
-
 areas = [area_of_interest]
 sig_thr = 0
 r2_thr  = np.inf
 # rf_type = 'Fsmooth'
 rf_type = 'Ftwin'
 
+os.makedirs(f'{RUN_FOLDER}/Plots/rf_analysis', exist_ok=True)
+os.makedirs(f'{RUN_FOLDER}/results/', exist_ok=True)
+
 for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique())):
+    areas = [area_of_interest]
+    sig_thr = 0
+    r2_thr  = np.inf
+    # rf_type = 'Fsmooth'
+    rf_type = 'Ftwin'
+    
     df_trunc = df.loc[df['dataset_name_full'] == dataset_name_full]
     num_neurons = df_trunc['cell_id'].nunique()
     
@@ -651,13 +653,22 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
         rf_type_twin = 'Ftwin'
         fig,axes     = plt.subplots(len(areas),len(spat_dims),figsize=(6,6))
 
+        c = sns.xkcd_rgb['barney'] if area_of_interest == 'PM' else sns.xkcd_rgb['seaweed']
+
+        # Flatten axes for easier indexing when areas is of length 1
+        if len(areas) == 0:
+            raise ValueError(f'Have to have at least one area, not {len(areas)}')
+        elif len(areas) == 1:
+            axes = np.expand_dims(axes, axis=0)  # Convert axes to 2D with shape (2, 1)
+
         for iarea,area in enumerate(areas):
             for ispat_dim,spat_dim in enumerate(spat_dims):
-                idx         = (sessions[0].celldata['roi_name'] == area) & (sessions[0].celldata['rf_r2_' + rf_type] < r2_thr)
+                idx         = (sessions[ises].celldata['roi_name'] == area) & (sessions[ises].celldata['rf_r2_' + rf_type] < r2_thr)
                 x = sessions[ises].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
                 y = sessions[ises].celldata[f'rf_{spat_dim}_{rf_type_twin}'][idx]
 
-                sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
+                # sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
+                sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=c,alpha=0.5)
                 axes[iarea,ispat_dim].set_title(f'{area} {spat_dim}',fontsize=12)
                 axes[iarea,ispat_dim].set_xlabel('Sparse Noise (deg)',fontsize=9)
                 axes[iarea,ispat_dim].set_ylabel(f'Dig. Twin Model',fontsize=9)
@@ -685,18 +696,24 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
                     axes[iarea,ispat_dim].text(x=int(min(x) - 5),y=int(min(y) - 5),s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
         fig.suptitle(f'Mean of 5 models')
         plt.tight_layout()
-        print(savedir)
-        fig.savefig(os.path.join(savedir, f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}.png'), format='png')
+        fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}.png'), format='png')
 
-        for i in range(5):
-            fig,axes     = plt.subplots(2,2,figsize=(6,6))
+        for i in range(num_models):
+            fig,axes     = plt.subplots(len(areas),len(spat_dims),figsize=(6,6))
+            
+            # Flatten axes for easier indexing when areas is of length 1
+            if len(areas) == 0:
+                raise ValueError(f'Have to have at least one area, not {len(areas)}')
+            elif len(areas) == 1:
+                axes = np.expand_dims(axes, axis=0)  # Convert axes to 2D with shape (2, 1)
             for iarea,area in enumerate(areas):
                 for ispat_dim,spat_dim in enumerate(spat_dims):
-                    idx         = (sessions[0].celldata['roi_name'] == area) & (sessions[0].celldata['rf_r2_' + rf_type] < r2_thr)
-                    x = sessions[0].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
-                    y = sessions[0].celldata[f'rf_{spat_dim}_{rf_type_twin}_{i}'][idx]
+                    idx         = (sessions[ises].celldata['roi_name'] == area) & (sessions[ises].celldata['rf_r2_' + rf_type] < r2_thr)
+                    x = sessions[ises].celldata[f'rf_{spat_dim}_{rf_type}'][idx]
+                    y = sessions[ises].celldata[f'rf_{spat_dim}_{rf_type_twin}_{i}'][idx]
 
-                    sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
+                    # sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=clrs_areas[iarea],alpha=0.5)
+                    sns.scatterplot(ax=axes[iarea,ispat_dim],x=x,y=y,s=7,c=c,alpha=0.5)
                     axes[iarea,ispat_dim].set_title(f'{area} {spat_dim} Model {i}',fontsize=12)
                     axes[iarea,ispat_dim].set_xlabel('Sparse Noise (deg)',fontsize=9)
                     axes[iarea,ispat_dim].set_ylabel(f'Dig. Twin Model {i}',fontsize=9)
@@ -724,4 +741,4 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
                         axes[iarea,ispat_dim].text(x=int(min(x) - 5),y=int(min(y) - 5),s='r = ' + str(np.round(np.corrcoef(x,y)[0,1],3),))
             plt.suptitle(f'Model {i}')
             plt.tight_layout()
-            fig.savefig(os.path.join(savedir, f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[0].sessiondata["session_id"][0]}_model_{i}.png'), format='png')
+            fig.savefig(os.path.join(f'{RUN_FOLDER}/Plots/rf_analysis', f'Alignment_TwinGaussLoc_RF_{rf_type}_{sessions[ises].sessiondata["session_id"][0]}_model_{i}.png'), format='png')

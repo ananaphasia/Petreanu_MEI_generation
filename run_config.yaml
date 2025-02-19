@@ -35,8 +35,8 @@ dev:
 
 ### DO NOT TOUCH AFTER THIS LINE! THESE VALUES ARE PROGRAMATICALLY UPDATED DURING RUNS
 current_vals:
-  RUN_NAME: V1_MEI_in_vivo_validation_with_grid_mean_predictor
-  RUN_FOLDER: runs/V1_MEI_in_vivo_validation_with_grid_mean_predictor
+  RUN_NAME: V1_MEI_in_vivo_validation_without_grid_mean_predictor
+  RUN_FOLDER: runs/V1_MEI_in_vivo_validation_without_grid_mean_predictor
   area_id: 0             # which area currently to work on
   data:
     area_of_interest: V1
