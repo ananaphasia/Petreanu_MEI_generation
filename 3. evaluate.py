@@ -579,7 +579,7 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
     r2_thr  = np.inf
     # rf_type = 'Fsmooth'
     rf_type = 'Ftwin'
-    
+
     df_trunc = df.loc[df['dataset_name_full'] == dataset_name_full]
     num_neurons = df_trunc['cell_id'].nunique()
     
@@ -589,9 +589,21 @@ for ises, dataset_name_full in enumerate(np.sort(df['dataset_name_full'].unique(
     locs = np.zeros((num_models, num_neurons, 2))
     
     for i, model in enumerate(model_list):
-        mus[i] = model.readout._modules[dataset_name_full].mu.detach().cpu().numpy().reshape(-1, 2)
-        sigmas[i] = model.readout._modules[dataset_name_full].sigma.detach().cpu().numpy().reshape(-1, 2, 2)
-        jitters[i] = model.readout._modules[dataset_name_full].jitter.detach().cpu().numpy().reshape(-1, 2)
+        try:
+            mus[i] = model.readout._modules[dataset_name_full].mu.detach().cpu().numpy().reshape(-1, 2)
+        except AttributeError:
+            mus[i] = np.zeros((num_neurons, 2))
+            print(f"WARNING: unable to get mus for model {i} dataset {dataset_name_full}. Setting to 0")
+        try:
+            sigmas[i] = model.readout._modules[dataset_name_full].sigma.detach().cpu().numpy().reshape(-1, 2, 2)
+        except AttributeError:
+            sigmas[i] = np.zeros((num_neurons, 2))
+            print(f"WARNING: unable to get sigmas for model {i} dataset {dataset_name_full}. Setting to 0")
+        try:
+            jitters[i] = model.readout._modules[dataset_name_full].jitter.detach().cpu().numpy().reshape(-1, 2)
+        except AttributeError:
+            jitters[i] = np.zeros((num_neurons, 2))
+            print(f"WARNING: unable to get jitters for model {i} dataset {dataset_name_full}. Setting to 0")
         locs[i] = mus[i] + jitters[i]
 
     neuron_stats = {
