@@ -1,6 +1,6 @@
 ## Configuration file for the run
 
-RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor, MEI_in_vivo_validation_without_grid_mean_predictor] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor_2, MEI_in_vivo_validation_without_grid_mean_predictor_2] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
   # Also, prepends the current area_of_interest + '_'. Either a string or a list of strings.
 ASK_FOR_CONFIRMATION: False # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
 RUN_FOLDER_OVERWRITE: null # null (or empty string), string, or list of strings with folders where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
@@ -19,15 +19,15 @@ data:
   #INPUT_FOLDER: '../sensorium/notebooks/data/IM_prezipped' # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
   INPUT_FOLDER: D:/Procdata/IM   # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
   map_to_ground_truth: False # whether we have an RF mapped gradient that we would want to map to
-  gt_session_id: LPE10885
-  gt_date: '2023_10_20'
+  gt_session_id: LPE13959
+  gt_date: '2025_02_24'
 
 MEIs:
   # data_key: 'LPE10885-LPE10885_2023_10_20-0' # format: session_id-session_id_date[YYYY_MM_DD]-0
   num_meis: 75 # How many MEIs to generate. May be slightly more than this if need to add on labeled cells. Recommended: 75 per area (150 total).
   num_labeled_cells: 10 # Minimum amount of labeled cells for which to generate MEIs. If not enough in the top num_meis neurons, added on to the end. Recommended: 10. 
   session_id: LPE13959   # For which session id to generate MEIs. Currently set up to only do one at a time.
-  session_date: '2025_02_17' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
+  session_date: '2025_02_24' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
   tier: all   # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
   also_output_to_local: True # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
   local_output_folder: D:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/
