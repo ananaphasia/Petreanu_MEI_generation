@@ -167,6 +167,8 @@ for loader_key, dataloader in dataloaders[tier].items():
         dataloader=dataloader, tier=tier
     )
 
+# TODO: calcualte oracle scorse only when >=10 times images presneted
+
 oracles, data = [], []
 # for inputs, *_, outputs in dataloaders[tier][data_key]:
 for i in dataloaders[tier][data_key]:

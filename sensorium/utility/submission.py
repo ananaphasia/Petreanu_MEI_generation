@@ -72,7 +72,9 @@ def get_data_filetree_loader(filename=None, dataloader=None, tier="test"):
 
     trial_indices, responses, image_ids = [], [], []
     for i, datapoint in enumerate(dat):
-        if tiers[i] != tier:
+        if tier == 'all':
+            pass
+        elif tiers[i] != tier:
             continue
 
         trial_indices.append(complete_trial_idx[i])

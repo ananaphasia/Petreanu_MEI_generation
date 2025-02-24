@@ -18,6 +18,9 @@ data:
   # Preprocessing
   #INPUT_FOLDER: '../sensorium/notebooks/data/IM_prezipped' # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
   INPUT_FOLDER: D:/Procdata/IM   # Data input folder. For the raw data. If relative, should be relative to the Petreanu_MEI_generation root folder.
+  map_to_ground_truth: False # whether we have an RF mapped gradient that we would want to map to
+  gt_session_id: LPE10885
+  gt_date: '2023_10_20'
 
 MEIs:
   # data_key: 'LPE10885-LPE10885_2023_10_20-0' # format: session_id-session_id_date[YYYY_MM_DD]-0
@@ -25,10 +28,13 @@ MEIs:
   num_labeled_cells: 10 # Minimum amount of labeled cells for which to generate MEIs. If not enough in the top num_meis neurons, added on to the end. Recommended: 10. 
   session_id: LPE13959   # For which session id to generate MEIs. Currently set up to only do one at a time.
   session_date: '2025_02_17' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
-  tier: test   # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
+  tier: all   # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
   also_output_to_local: True # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
   local_output_folder: D:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
+  validate_MEIs: False # Whether to run 5. match_MEIs, should only be set to True with the next two lines after the second day of recording
+  validation_session: [['LPE13959', '2025_02_19']] # Which session to validate MEIs against after the second day of recording. 
+  validation_session_input_folder: 'D:/Procdata/IM' # Where the data for the MEI session lives.
 
 dev:
   num_models: 5 # number of models to run, which are then used in the ensemble. Max: 5.
