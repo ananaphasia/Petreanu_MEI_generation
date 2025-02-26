@@ -1,6 +1,8 @@
 ## Configuration file for the run
 
-RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor_2, MEI_in_vivo_validation_without_grid_mean_predictor_2] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+#RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor_2, MEI_in_vivo_validation_without_grid_mean_predictor_2] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+
   # Also, prepends the current area_of_interest + '_'. Either a string or a list of strings.
 ASK_FOR_CONFIRMATION: False # If True, will ask for user configuration before running preprocessing, training, etc. If False, will just continue (useful for overnight runs)
 RUN_FOLDER_OVERWRITE: null # null (or empty string), string, or list of strings with folders where to save the run, which includes its data, etc. Using this does not add on the RUN_NAME to the end of the string. If relative, should be relative to the Petreanu_MEI_generation root folder. If none, defaults to: 'runs/RUN_NAME'
@@ -33,8 +35,8 @@ MEIs:
   local_output_folder: D:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
   validate_MEIs: False # Whether to run 5. match_MEIs, should only be set to True with the next two lines after the second day of recording
-  validation_session: [['LPE13959', '2025_02_19']] # Which session to validate MEIs against after the second day of recording. 
-  validation_session_input_folder: 'D:/Procdata/IM' # Where the data for the MEI session lives.
+  validation_session: [[LPE13959, '2025_02_25']]   # Which session to validate MEIs against after the second day of recording. 
+  validation_session_input_folder: D:/Procdata/IM   # Where the data for the MEI session lives.
 
 dev:
   num_models: 5 # number of models to run, which are then used in the ensemble. Max: 5.
@@ -42,8 +44,8 @@ dev:
 ### DO NOT TOUCH AFTER THIS LINE! THESE VALUES ARE PROGRAMATICALLY UPDATED DURING RUNS
 ### Conversely: if you want to run a specific run, change these values. See in `0. run_pipeline.py` how they're set and generated.
 current_vals:
-  RUN_NAME: V1_MEI_in_vivo_validation_without_grid_mean_predictor
-  RUN_FOLDER: runs/V1_MEI_in_vivo_validation_without_grid_mean_predictor
-  area_id: 0             # which area currently to work on
+  RUN_NAME: PM_MEI_in_vivo_validation_with_grid_mean_predictor
+  RUN_FOLDER: runs/PM_MEI_in_vivo_validation_with_grid_mean_predictor
+  area_id: 1             # which area currently to work on
   data:
-    area_of_interest: V1
+    area_of_interest: PM
