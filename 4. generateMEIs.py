@@ -280,6 +280,7 @@ print(f'Generating MEIs with the following shape: {mei_generation_shape}')
 print(f'Generating {len(final_selection)} best MEIs out of {len(final_neurons)} neurons selected')
 for i in tqdm(final_selection):
     mei_out, _, _ = gradient_ascent(ensemble, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape), model_config=pupil_center_config) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
+    
     meis.append(mei_out)
 # torch.save(meis, "MEIs/meis.pth")
 torch.save(meis, f'{RUN_FOLDER}/meis_top{len(final_selection)}_ensemble.pth')
@@ -306,7 +307,7 @@ for i in tqdm(range(8)):
     for j in range(5):
         index = i * 5 + j
         # axes[i, j].imshow(meis[index].reshape(4, 68, 135).mean(0), cmap="gray")#, vmin=-1, vmax=1)
-        axes[i, j].imshow(meis[index][0, 0, ...], cmap="gray")#, vmin=-1, vmax=1)
+        axes[i, j].imshow(meis[index][0, 0, ...], cmap="gray", vmin=-1, vmax=1)
         axes[i, j].spines['top'].set_color('black')
         axes[i, j].spines['bottom'].set_color('black')
         axes[i, j].spines['left'].set_color('black')
@@ -345,7 +346,7 @@ for k in range(num_models):
     for i in tqdm(range(8)):
         for j in range(5):
             index = i * 5 + j
-            axes[i, j].imshow(meis[index].reshape(mei_generation_shape[1:])[0, :, :], cmap="gray")#, vmin=-1, vmax=1)
+            axes[i, j].imshow(meis[index].reshape(mei_generation_shape[1:])[0, :, :], cmap="gray", vmin=-1, vmax=1)
             axes[i, j].spines['top'].set_color('black')
             axes[i, j].spines['bottom'].set_color('black')
             axes[i, j].spines['left'].set_color('black')
@@ -379,7 +380,7 @@ fig.suptitle("Mouse MEIs Average", y=0.91, fontsize=50)
 for i in tqdm(range(8)):
     for j in range(5):
         index = i * 5 + j
-        axes[i, j].imshow(avg_meis[index][0, 0, :, :], cmap="gray")#, vmin=-1, vmax=1)
+        axes[i, j].imshow(avg_meis[index][0, 0, :, :], cmap="gray", vmin=-1, vmax=1)
         axes[i, j].spines['top'].set_color('black')
         axes[i, j].spines['bottom'].set_color('black')
         axes[i, j].spines['left'].set_color('black')
