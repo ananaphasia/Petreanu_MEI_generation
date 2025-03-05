@@ -200,6 +200,11 @@ oracle_scores = oracle_scores_pearson  # or use oracle_scores_spearman if prefer
 
 # 1. Select cells within top 50% of oracle scores
 
+neurons_order = np.argsort(oracle_scores)[::-1]
+
+# sort neurons by oracle scores
+# df_
+
 selected_neurons = np.argsort(oracle_scores)[::-1][:len(oracle_scores)//2]
 
 # 2. Exclude neurons within 10um of the scanning fields

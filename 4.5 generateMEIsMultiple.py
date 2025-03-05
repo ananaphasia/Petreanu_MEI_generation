@@ -144,209 +144,177 @@ config_mei = dict(
     device="cuda"
 )
 
-df_cta = df_cta.loc[df_cta['dataset'] == data_key].reset_index(drop=True)
+for data_key, _ in dataloaders[tier].items():    
 
-top200units = df_cta.sort_values(['Correlation to Average'], ascending=False).reset_index()[:200]['index'].to_list()
-top40units = df_cta.sort_values(['Correlation to Average'], ascending=False).reset_index()[:40]['index'].to_list()
+    RUN_FOLDER = f'{RUN_FOLDER}/{data_key}'
+    os.makedirs(RUN_FOLDER, exist_ok=True)
 
-ensemble = ensemble.eval()
+    df_cta = df_cta.loc[df_cta['dataset'] == data_key].reset_index(drop=True)
 
-pupil_center_config = {"pupil_center": torch.from_numpy(stats.mode([np.mean(np.array(list(dataloaders[i][data_key].dataset._cache['pupil_center'].values())), axis=0) for i in dataloaders]).mode).to(torch.float32).to("cuda:0")}
+    top200units = df_cta.sort_values(['Correlation to Average'], ascending=False).reset_index()[:200]['index'].to_list()
+    top40units = df_cta.sort_values(['Correlation to Average'], ascending=False).reset_index()[:40]['index'].to_list()
 
-data_path = os.path.join(data_basepath, data_key.split('-')[1].split('_')[0] + '/' + '_'.join(data_key.split('-')[1].split('_')[1:]))
-celldata = pd.read_csv(data_path + '/celldata.csv')
-celldata = celldata.loc[celldata['roi_name'] == area_of_interest] if area_of_interest is not None else celldata
-assert len(df_cta[df_cta['dataset'] == data_key]) == len(celldata), f"Length of df_cta and celldata not equal, {len(df_cta[df_cta['dataset'] == data_key])} != {len(celldata)} of {data_key}"
-df_cta.loc[df_cta['dataset'] == data_key, 'labeled'] = celldata['redcell'].astype(bool).values
-df_cta.loc[df_cta['dataset'] == data_key, 'cell_id'] = celldata['cell_id'].values
+    ensemble = ensemble.eval()
 
-for loader_key, dataloader in dataloaders[tier].items():
-    if loader_key != data_key:
-        continue
-    trial_indices, image_ids, neuron_ids, responses = get_data_filetree_loader(
-        dataloader=dataloader, tier=tier
-    )
+    pupil_center_config = {"pupil_center": torch.from_numpy(stats.mode([np.mean(np.array(list(dataloaders[i][data_key].dataset._cache['pupil_center'].values())), axis=0) for i in dataloaders]).mode).to(torch.float32).to("cuda:0")}
 
-# TODO: calcualte oracle scorse only when >=10 times images presneted
+    data_path = os.path.join(data_basepath, data_key.split('-')[1].split('_')[0] + '/' + '_'.join(data_key.split('-')[1].split('_')[1:]))
+    celldata = pd.read_csv(data_path + '/celldata.csv')
+    celldata = celldata.loc[celldata['roi_name'] == area_of_interest] if area_of_interest is not None else celldata
+    assert len(df_cta[df_cta['dataset'] == data_key]) == len(celldata), f"Length of df_cta and celldata not equal, {len(df_cta[df_cta['dataset'] == data_key])} != {len(celldata)} of {data_key}"
+    df_cta.loc[df_cta['dataset'] == data_key, 'labeled'] = celldata['redcell'].astype(bool).values
+    df_cta.loc[df_cta['dataset'] == data_key, 'cell_id'] = celldata['cell_id'].values
 
-oracles, data = [], []
-# for inputs, *_, outputs in dataloaders[tier][data_key]:
-for i in dataloaders[tier][data_key]:
-    outputs = i.responses.cpu().numpy()
-    r, n = outputs.shape  # responses X neurons
-    mu = outputs.mean(axis=0, keepdims=True)
-    oracle = (mu - outputs / r) * r / (r - 1)
-    oracles.append(oracle)
-    data.append(outputs)
-if len(data) == 0:
-    raise ValueError('Found no oracle trials!')
+    for loader_key, dataloader in dataloaders[tier].items():
+        if loader_key != data_key:
+            continue
+        trial_indices, image_ids, neuron_ids, responses = get_data_filetree_loader(
+            dataloader=dataloader, tier=tier
+        )
 
-# Pearson correlation
-pearson = corr(np.vstack(data), np.vstack(oracles), axis=0)
+    # TODO: calcualte oracle scorse only when >=10 times images presneted
 
-# Spearman correlation
-data_rank = np.empty(np.vstack(data).shape)
-oracles_rank = np.empty(np.vstack(oracles).shape)
-for i in range(np.vstack(data).shape[1]):
-    data_rank[:, i] = np.argsort(np.argsort(np.vstack(data)[:, i]))
-    oracles_rank[:, i] = np.argsort(np.argsort(np.vstack(oracles)[:, i]))
-spearman = corr(data_rank, oracles_rank, axis=0)
+    oracles, data = [], []
+    # for inputs, *_, outputs in dataloaders[tier][data_key]:
+    for i in dataloaders[tier][data_key]:
+        outputs = i.responses.cpu().numpy()
+        r, n = outputs.shape  # responses X neurons
+        mu = outputs.mean(axis=0, keepdims=True)
+        oracle = (mu - outputs / r) * r / (r - 1)
+        oracles.append(oracle)
+        data.append(outputs)
+    if len(data) == 0:
+        raise ValueError('Found no oracle trials!')
 
-# oracle_scores_pearson = np.mean(pearson, axis=0)
-# oracle_scores_spearman = np.mean(spearman, axis=0)
-oracle_scores_pearson = pearson
-oracle_scores_spearman = spearman
-oracle_scores = oracle_scores_pearson  # or use oracle_scores_spearman if preferred, but Finz et al. uses Pearson
+    # Pearson correlation
+    pearson = corr(np.vstack(data), np.vstack(oracles), axis=0)
 
-# 1. Select cells within top 50% of oracle scores
+    # Spearman correlation
+    data_rank = np.empty(np.vstack(data).shape)
+    oracles_rank = np.empty(np.vstack(oracles).shape)
+    for i in range(np.vstack(data).shape[1]):
+        data_rank[:, i] = np.argsort(np.argsort(np.vstack(data)[:, i]))
+        oracles_rank[:, i] = np.argsort(np.argsort(np.vstack(oracles)[:, i]))
+    spearman = corr(data_rank, oracles_rank, axis=0)
 
-selected_neurons = np.argsort(oracle_scores)[::-1][:len(oracle_scores)//2]
+    # oracle_scores_pearson = np.mean(pearson, axis=0)
+    # oracle_scores_spearman = np.mean(spearman, axis=0)
+    oracle_scores_pearson = pearson
+    oracle_scores_spearman = spearman
+    oracle_scores = oracle_scores_pearson  # or use oracle_scores_spearman if preferred, but Finz et al. uses Pearson
 
-# 2. Exclude neurons within 10um of the scanning fields
+    # 1. Select cells within top 50% of oracle scores
 
-# Min and max values of the scanning fields
-x_min = 0
-x_max = 600
-y_min = 0
-y_max = 600
+    selected_neurons = np.argsort(oracle_scores)[::-1][:len(oracle_scores)//2]
 
-# Calculate the max values allowed for the neurons
-x_min = x_min + 10
-x_max = x_max - 10
-y_min = y_min + 10
-y_max = y_max - 10
+    # 2. Exclude neurons within 10um of the scanning fields
 
-selected_neurons = selected_neurons[np.where((celldata['xloc'].values[selected_neurons] > x_min) & (celldata['xloc'].values[selected_neurons] < x_max) & (celldata['yloc'].values[selected_neurons] > y_min) & (celldata['yloc'].values[selected_neurons] < y_max))[0]]
+    # Min and max values of the scanning fields
+    x_min = 0
+    x_max = 600
+    y_min = 0
+    y_max = 600
 
-# 3. Select cells within top 30% of oracle scores of previous selection. Is this step necessary?
+    # Calculate the max values allowed for the neurons
+    x_min = x_min + 10
+    x_max = x_max - 10
+    y_min = y_min + 10
+    y_max = y_max - 10
 
-# selected_neurons = selected_neurons[np.argsort(oracle_scores[selected_neurons])[::-1][:len(selected_neurons)//3]]
+    selected_neurons = selected_neurons[np.where((celldata['xloc'].values[selected_neurons] > x_min) & (celldata['xloc'].values[selected_neurons] < x_max) & (celldata['yloc'].values[selected_neurons] > y_min) & (celldata['yloc'].values[selected_neurons] < y_max))[0]]
 
-# 4. Iterate for neurons in order of decreasing oracle scores, excluding neurons that are within 20um of it
+    # 3. Select cells within top 30% of oracle scores of previous selection. Is this step necessary?
 
-neurons_to_exclude = []
-final_neurons = []
-for i in selected_neurons:
-    if i in neurons_to_exclude:
-        continue
-    final_neurons.append(i)
-    neurons_to_exclude.extend(np.where(np.linalg.norm(celldata[['xloc', 'yloc', 'depth']].values - celldata[['xloc', 'yloc', 'depth']].values[i], axis=1) < 20)[0])
+    # selected_neurons = selected_neurons[np.argsort(oracle_scores[selected_neurons])[::-1][:len(selected_neurons)//3]]
 
-# 5. Select max num_meis best neurons of which at least 10 are labeled
-celldata['index_reset'] = np.arange(len(celldata))
-final_neurons_labeled = celldata.iloc[final_neurons].loc[(celldata['redcell'] == True)]['index_reset'].values
+    # 4. Iterate for neurons in order of decreasing oracle scores, excluding neurons that are within 20um of it
 
-if len(final_neurons_labeled) < 10:
-    print(f'WARNING: Less than 10 labeled neurons available, {len(final_neurons_labeled)} available. Continuing on...')
+    neurons_to_exclude = []
+    final_neurons = []
+    for i in selected_neurons:
+        if i in neurons_to_exclude:
+            continue
+        final_neurons.append(i)
+        neurons_to_exclude.extend(np.where(np.linalg.norm(celldata[['xloc', 'yloc', 'depth']].values - celldata[['xloc', 'yloc', 'depth']].values[i], axis=1) < 20)[0])
 
-final_selection = []
-labeled_count = 0
+    # 5. Select max num_meis best neurons of which at least 10 are labeled
+    celldata['index_reset'] = np.arange(len(celldata))
+    final_neurons_labeled = celldata.iloc[final_neurons].loc[(celldata['redcell'] == True)]['index_reset'].values
 
-for i in final_neurons:
-    if len(final_selection) >= num_meis:
-        break
-    if i in final_neurons_labeled:
-        labeled_count += 1
-    final_selection.append(i)
+    if len(final_neurons_labeled) < 10:
+        print(f'WARNING: Less than 10 labeled neurons available, {len(final_neurons_labeled)} available. Continuing on...')
 
-if labeled_count < num_labeled_cells:
-    additional_needed = num_labeled_cells - labeled_count
-    remaining_labeled = [i for i in final_neurons_labeled if i not in final_selection]
+    final_selection = []
+    labeled_count = 0
 
-    final_selection.extend(remaining_labeled[:additional_needed])
+    for i in final_neurons:
+        if len(final_selection) >= num_meis:
+            break
+        if i in final_neurons_labeled:
+            labeled_count += 1
+        final_selection.append(i)
 
-# 6. Assert that at least num_labeled_cells labeled neurons are selected
+    if labeled_count < num_labeled_cells:
+        additional_needed = num_labeled_cells - labeled_count
+        remaining_labeled = [i for i in final_neurons_labeled if i not in final_selection]
 
-# assert celldata.loc[final_neurons, 'redcell'].sum() >= 10, f"Less than 10 labeled neurons selected, {celldata.loc[final_neurons, 'redcell'].sum()} selected"
-if celldata.iloc[final_selection]['redcell'].sum() < num_labeled_cells:
-    print(f"WARNING: Less than {num_labeled_cells} labeled neurons selected, {celldata.iloc[final_neurons]['redcell'].sum()} selected for MEI generation")
-else:
-    print(f"Selected {celldata.iloc[final_selection]['redcell'].sum()} labeled neurons for MEI generation")
+        final_selection.extend(remaining_labeled[:additional_needed])
 
-cell_ids = df_cta.iloc[final_selection]['cell_id'].values
+    # 6. Assert that at least num_labeled_cells labeled neurons are selected
 
-# save cell_ids, final_neurons
-df_cell_ids = pd.DataFrame({'cell_id': cell_ids, 'neuron_idx': final_selection})
-df_cell_ids.to_csv(f'{RUN_FOLDER}/results/cell_ids.csv', index=False)
+    # assert celldata.loc[final_neurons, 'redcell'].sum() >= 10, f"Less than 10 labeled neurons selected, {celldata.loc[final_neurons, 'redcell'].sum()} selected"
+    if celldata.iloc[final_selection]['redcell'].sum() < num_labeled_cells:
+        print(f"WARNING: Less than {num_labeled_cells} labeled neurons selected, {celldata.iloc[final_neurons]['redcell'].sum()} selected for MEI generation")
+    else:
+        print(f"Selected {celldata.iloc[final_selection]['redcell'].sum()} labeled neurons for MEI generation")
 
-meis = []
+    cell_ids = df_cta.iloc[final_selection]['cell_id'].values
 
-mei_shape_start = (1, 4) # We prepend this because there's 4 input channels: 1 image and 3 behavioral
-mei_shape_start = list(mei_shape_start)
-mei_generation_shape = mei_shape_start.copy()
-mei_generation_shape.extend(list(mei_shape))
+    # save cell_ids, final_neurons
+    os.makedirs(f'{RUN_FOLDER}/results', exist_ok=True)
+    df_cell_ids = pd.DataFrame({'cell_id': cell_ids, 'neuron_idx': final_selection})
+    df_cell_ids.to_csv(f'{RUN_FOLDER}/results/cell_ids.csv', index=False)
 
-print(f'Generating MEIs with the following shape: {mei_generation_shape}')
-print(f'Generating {len(final_selection)} best MEIs out of {len(final_neurons)} neurons selected')
-for i in tqdm(final_selection):
-    mei_out, _, _ = gradient_ascent(ensemble, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape), model_config=pupil_center_config) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
-    
-    meis.append(mei_out)
-# torch.save(meis, "MEIs/meis.pth")
-torch.save(meis, f'{RUN_FOLDER}/meis_top{len(final_selection)}_ensemble.pth')
-
-# Save MEIs in Bonsai format
-print('Saving MEIs in Bonsai format')
-os.makedirs(f'{RUN_FOLDER}/MEI_Bonsai_images', exist_ok=True)
-
-for imei, mei_out in enumerate(meis):
-    mei_out = np.array(mei_out[0, 0, ...])
-    mei_out = (mei_out + 1) / 2
-    mei_out = np.concatenate((np.full(mei_shape, 0.5),mei_out), axis=1) #add left part of the screen
-    mei_out = (mei_out * 255).astype(np.uint8)
-    # np.save(os.path.join(outdir,'%d.jpg' % imei),mei_out)
-    img = Image.fromarray(mei_out)
-    img.save(os.path.join(f'{RUN_FOLDER}/MEI_Bonsai_images','%s.jpg' % cell_ids[imei]), format='JPEG')
-
-    if run_config['MEIs']['also_output_to_local']:
-        img.save(os.path.join(run_config['MEIs']['local_output_folder'],'%s.jpg' % cell_ids[imei]), format='JPEG')
-
-fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-fig.suptitle("Mouse MEIs", y=0.91, fontsize=50)
-for i in tqdm(range(8)):
-    for j in range(5):
-        index = i * 5 + j
-        # axes[i, j].imshow(meis[index].reshape(4, 68, 135).mean(0), cmap="gray")#, vmin=-1, vmax=1)
-        axes[i, j].imshow(meis[index][0, 0, ...], cmap="gray", vmin=-1, vmax=1)
-        axes[i, j].spines['top'].set_color('black')
-        axes[i, j].spines['bottom'].set_color('black')
-        axes[i, j].spines['left'].set_color('black')
-        axes[i, j].spines['right'].set_color('black')
-        axes[i, j].spines['top'].set_linewidth(1)
-        axes[i, j].spines['bottom'].set_linewidth(1)
-        axes[i, j].spines['left'].set_linewidth(1)
-        axes[i, j].spines['right'].set_linewidth(1)
-        axes[i, j].set_xticks([])
-        axes[i, j].set_yticks([])
-plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
-# os.makedirs("Plots", exist_ok=True)
-# plt.savefig("Plots/MouseMEIsTop200.png", dpi=300)
-os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
-plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40.png', dpi=300)
-# plt.show()
-
-for i, model in enumerate(model_list):
-    model = model.eval()
-    model_list[i] = model
-
-for model_idx, model in enumerate(model_list):
-    print(f"Generating MEIs for model {model_idx}")
     meis = []
-    for i in tqdm(final_selection):
-        mei_out, _, _ = gradient_ascent(model, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape)) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
-        meis.append(mei_out)
-    # torch.save(meis, f"MEIs/meis_model_{model_idx}.pth")
-    torch.save(meis, f'{RUN_FOLDER}/meis_model_{model_idx}.pth')
 
-for k in range(num_models):
-    # meis = torch.load(f"MEIs/meis_model_{k}.pth")
-    meis = torch.load(f'{RUN_FOLDER}/meis_model_{k}.pth')
+    mei_shape_start = (1, 4) # We prepend this because there's 4 input channels: 1 image and 3 behavioral
+    mei_shape_start = list(mei_shape_start)
+    mei_generation_shape = mei_shape_start.copy()
+    mei_generation_shape.extend(list(mei_shape))
+
+    print(f'Generating MEIs with the following shape: {mei_generation_shape}')
+    print(f'Generating {len(final_selection)} best MEIs out of {len(final_neurons)} neurons selected')
+    for i in tqdm(final_selection):
+        mei_out, _, _ = gradient_ascent(ensemble, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape), model_config=pupil_center_config) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
+        
+        meis.append(mei_out)
+    # torch.save(meis, "MEIs/meis.pth")
+    os.makedirs(f'{RUN_FOLDER}/MEIs', exist_ok=True)
+    torch.save(meis, f'{RUN_FOLDER}/meis_top{len(final_selection)}_ensemble.pth')
+
+    # Save MEIs in Bonsai format
+    print('Saving MEIs in Bonsai format')
+    os.makedirs(f'{RUN_FOLDER}/MEI_Bonsai_images', exist_ok=True)
+
+    for imei, mei_out in enumerate(meis):
+        mei_out = np.array(mei_out[0, 0, ...])
+        mei_out = (mei_out + 1) / 2
+        mei_out = np.concatenate((np.full(mei_shape, 0.5),mei_out), axis=1) #add left part of the screen
+        mei_out = (mei_out * 255).astype(np.uint8)
+        # np.save(os.path.join(outdir,'%d.jpg' % imei),mei_out)
+        img = Image.fromarray(mei_out)
+        img.save(os.path.join(f'{RUN_FOLDER}/MEI_Bonsai_images','%s.jpg' % cell_ids[imei]), format='JPEG')
+
+        if run_config['MEIs']['also_output_to_local']:
+            img.save(os.path.join(run_config['MEIs']['local_output_folder'],'%s.jpg' % cell_ids[imei]), format='JPEG')
+
     fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-    fig.suptitle(f"Mouse MEIs model {k}", y=0.91, fontsize=50)
+    fig.suptitle("Mouse MEIs", y=0.91, fontsize=50)
     for i in tqdm(range(8)):
         for j in range(5):
             index = i * 5 + j
-            axes[i, j].imshow(meis[index].reshape(mei_generation_shape[1:])[0, :, :], cmap="gray", vmin=-1, vmax=1)
+            # axes[i, j].imshow(meis[index].reshape(4, 68, 135).mean(0), cmap="gray")#, vmin=-1, vmax=1)
+            axes[i, j].imshow(meis[index][0, 0, ...], cmap="gray", vmin=-1, vmax=1)
             axes[i, j].spines['top'].set_color('black')
             axes[i, j].spines['bottom'].set_color('black')
             axes[i, j].spines['left'].set_color('black')
@@ -359,41 +327,80 @@ for k in range(num_models):
             axes[i, j].set_yticks([])
     plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
     # os.makedirs("Plots", exist_ok=True)
-    # plt.savefig(f"Plots/MouseMEIsTop200Model{k}.png", dpi=300)
+    # plt.savefig("Plots/MouseMEIsTop200.png", dpi=300)
     os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
-    plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40Model{k}.png', dpi=300)
+    plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40.png', dpi=300)
     # plt.show()
 
-meis_list = []
+    for i, model in enumerate(model_list):
+        model = model.eval()
+        model_list[i] = model
 
-for i in range(num_models):
-    # meis_list.append(torch.load(f"MEIs/meis_model_{i}.pth"))
-    meis_list.append(torch.load(f'{RUN_FOLDER}/meis_model_{i}.pth'))
+    for model_idx, model in enumerate(model_list):
+        print(f"Generating MEIs for model {model_idx}")
+        meis = []
+        for i in tqdm(final_selection):
+            mei_out, _, _ = gradient_ascent(model, config_mei, data_key=data_key, unit=i, seed=seed, shape=tuple(mei_generation_shape)) # need to pass all dimensions, but all except the first 1 are set to 0 in the transform
+            meis.append(mei_out)
+        # torch.save(meis, f"MEIs/meis_model_{model_idx}.pth")
+        torch.save(meis, f'{RUN_FOLDER}/meis_model_{model_idx}.pth')
 
-meis_list = [torch.stack(meis, dim=0) for meis in meis_list]
-meis_list = torch.stack(meis_list, dim=0)
+    for k in range(num_models):
+        # meis = torch.load(f"MEIs/meis_model_{k}.pth")
+        meis = torch.load(f'{RUN_FOLDER}/meis_model_{k}.pth')
+        fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
+        fig.suptitle(f"Mouse MEIs model {k}", y=0.91, fontsize=50)
+        for i in tqdm(range(8)):
+            for j in range(5):
+                index = i * 5 + j
+                axes[i, j].imshow(meis[index].reshape(mei_generation_shape[1:])[0, :, :], cmap="gray", vmin=-1, vmax=1)
+                axes[i, j].spines['top'].set_color('black')
+                axes[i, j].spines['bottom'].set_color('black')
+                axes[i, j].spines['left'].set_color('black')
+                axes[i, j].spines['right'].set_color('black')
+                axes[i, j].spines['top'].set_linewidth(1)
+                axes[i, j].spines['bottom'].set_linewidth(1)
+                axes[i, j].spines['left'].set_linewidth(1)
+                axes[i, j].spines['right'].set_linewidth(1)
+                axes[i, j].set_xticks([])
+                axes[i, j].set_yticks([])
+        plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
+        # os.makedirs("Plots", exist_ok=True)
+        # plt.savefig(f"Plots/MouseMEIsTop200Model{k}.png", dpi=300)
+        os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
+        plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40Model{k}.png', dpi=300)
+        # plt.show()
 
-avg_meis = meis_list.mean(dim=0)
+    meis_list = []
 
-fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-fig.suptitle("Mouse MEIs Average", y=0.91, fontsize=50)
-for i in tqdm(range(8)):
-    for j in range(5):
-        index = i * 5 + j
-        axes[i, j].imshow(avg_meis[index][0, 0, :, :], cmap="gray", vmin=-1, vmax=1)
-        axes[i, j].spines['top'].set_color('black')
-        axes[i, j].spines['bottom'].set_color('black')
-        axes[i, j].spines['left'].set_color('black')
-        axes[i, j].spines['right'].set_color('black')
-        axes[i, j].spines['top'].set_linewidth(1)
-        axes[i, j].spines['bottom'].set_linewidth(1)
-        axes[i, j].spines['left'].set_linewidth(1)
-        axes[i, j].spines['right'].set_linewidth(1)
-        axes[i, j].set_xticks([])
-        axes[i, j].set_yticks([])
-plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
-# os.makedirs("Plots", exist_ok=True)
-# plt.savefig("Plots/MouseMEIsTop200Average.png", dpi=300)
-os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
-plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40Average.png', dpi=300)
-# plt.show()
+    for i in range(num_models):
+        # meis_list.append(torch.load(f"MEIs/meis_model_{i}.pth"))
+        meis_list.append(torch.load(f'{RUN_FOLDER}/meis_model_{i}.pth'))
+
+    meis_list = [torch.stack(meis, dim=0) for meis in meis_list]
+    meis_list = torch.stack(meis_list, dim=0)
+
+    avg_meis = meis_list.mean(dim=0)
+
+    fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
+    fig.suptitle("Mouse MEIs Average", y=0.91, fontsize=50)
+    for i in tqdm(range(8)):
+        for j in range(5):
+            index = i * 5 + j
+            axes[i, j].imshow(avg_meis[index][0, 0, :, :], cmap="gray", vmin=-1, vmax=1)
+            axes[i, j].spines['top'].set_color('black')
+            axes[i, j].spines['bottom'].set_color('black')
+            axes[i, j].spines['left'].set_color('black')
+            axes[i, j].spines['right'].set_color('black')
+            axes[i, j].spines['top'].set_linewidth(1)
+            axes[i, j].spines['bottom'].set_linewidth(1)
+            axes[i, j].spines['left'].set_linewidth(1)
+            axes[i, j].spines['right'].set_linewidth(1)
+            axes[i, j].set_xticks([])
+            axes[i, j].set_yticks([])
+    plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
+    # os.makedirs("Plots", exist_ok=True)
+    # plt.savefig("Plots/MouseMEIsTop200Average.png", dpi=300)
+    os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
+    plt.savefig(f'{RUN_FOLDER}/Plots/MouseMEIsTop40Average.png', dpi=300)
+    # plt.show()

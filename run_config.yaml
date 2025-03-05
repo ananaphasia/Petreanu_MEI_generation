@@ -31,7 +31,7 @@ MEIs:
   session_id: LPE13959   # For which session id to generate MEIs. Currently set up to only do one at a time.
   session_date: '2025_02_24' # format: YYYY_MM_DD. For which session date to generate MEIs. Currently set up to only do one at a time.
   tier: all   # 'test', 'train', 'validation', 'final_test', or 'all'. Which tier of the data to select the neurons for MEI generation.
-  also_output_to_local: True # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
+  also_output_to_local: False # Whether to also output the MEIs not just to the RUN_FOLDER, but also to a different output location. 
   local_output_folder: D:/Bonsai/lab-leopoldo-solene-vr/workflows/MEIs/
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
   validate_MEIs: False # Whether to run 5. match_MEIs, should only be set to True with the next two lines after the second day of recording
