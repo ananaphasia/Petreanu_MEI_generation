@@ -44,8 +44,8 @@ dev:
 ### DO NOT TOUCH AFTER THIS LINE! THESE VALUES ARE PROGRAMATICALLY UPDATED DURING RUNS
 ### Conversely: if you want to run a specific run, change these values. See in `0. run_pipeline.py` how they're set and generated.
 current_vals:
-  RUN_NAME: V1_MEI_in_vivo_validation_with_grid_mean_predictor
-  RUN_FOLDER: runs/V1_MEI_in_vivo_validation_with_grid_mean_predictor
+  RUN_NAME: PM_MEI_in_vivo_validation_with_grid_mean_predictor
+  RUN_FOLDER: runs/PM_MEI_in_vivo_validation_with_grid_mean_predictor
   area_id: 1             # which area currently to work on
   data:
-    area_of_interest: V1
+    area_of_interest: PM
