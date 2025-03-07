@@ -144,12 +144,15 @@ config_mei = dict(
     device="cuda"
 )
 
+RUN_FOLDER_BASE = RUN_FOLDER
+df_cta_full = df_cta.copy()
+
 for data_key, _ in dataloaders[tier].items():    
 
-    RUN_FOLDER = f'{RUN_FOLDER}/{data_key}'
+    RUN_FOLDER = f'{RUN_FOLDER_BASE}/{data_key}'
     os.makedirs(RUN_FOLDER, exist_ok=True)
 
-    df_cta = df_cta.loc[df_cta['dataset'] == data_key].reset_index(drop=True)
+    df_cta = df_cta_full.loc[df_cta_full['dataset'] == data_key].reset_index(drop=True)
 
     top200units = df_cta.sort_values(['Correlation to Average'], ascending=False).reset_index()[:200]['index'].to_list()
     top40units = df_cta.sort_values(['Correlation to Average'], ascending=False).reset_index()[:40]['index'].to_list()
