@@ -128,8 +128,13 @@ except NameError:
     session_list = [x for x in session_list if x != ['LPE10919', '2023_11_08']]
     print(session_list)
 
-if sessions_to_keep != 'all':
+if not isinstance(sessions_to_keep, str):
+    sessions_to_keep = [tuple(x) for x in sessions_to_keep]
+    session_list = [tuple(x) for x in session_list]
     session_list = [x for x in session_list if x in sessions_to_keep]
+    session_list = [list(x) for x in session_list]
+elif sessions_to_keep == 'all':
+    pass
 
 session_list = np.array(session_list)
 
