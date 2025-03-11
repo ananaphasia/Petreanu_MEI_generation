@@ -14,7 +14,7 @@ model:
 # Data parameters
 data:
   keep_behavioral_info: False
-  areas_of_interest: [V1, PM]     # List of which runs to do. None for all neurons, 'PM' for only PM neurons, 'V1' for only V1 neurons. Will likely fail with None value set.
+  areas_of_interest: [PM]     # List of which runs to do. None for all neurons, 'PM' for only PM neurons, 'V1' for only V1 neurons. Will likely fail with None value set.
   sessions_to_keep: all   # 'all' or list of sessions to keep, eg [['LPE10885', '2023_10_20'], ...]
 
   # Preprocessing
@@ -36,7 +36,7 @@ MEIs:
   shape: [68, 135] # shape of the MEI. Needs to be a list of two integers.
   validate_MEIs: False # Whether to run 5. match_MEIs, should only be set to True with the next two lines after the second day of recording
   validation_session: [[LPE13959, '2025_02_26']]   # Which session to validate MEIs against after the second day of recording. 
-  validation_session_input_folder: D:/Procdata/IM   # Where the data for the MEI session lives.
+  validation_session_input_folder: D:/Procdata/IM   # Where the data for the M EI session lives.
 
 dev:
   num_models: 5 # number of models to run, which are then used in the ensemble. Max: 5.
@@ -44,8 +44,8 @@ dev:
 ### DO NOT TOUCH AFTER THIS LINE! THESE VALUES ARE PROGRAMATICALLY UPDATED DURING RUNS
 ### Conversely: if you want to run a specific run, change these values. See in `0. run_pipeline.py` how they're set and generated.
 current_vals:
-  RUN_NAME: PM_MEI_in_vivo_validation_with_grid_mean_predictor
-  RUN_FOLDER: runs/PM_MEI_in_vivo_validation_with_grid_mean_predictor
-  area_id: 1             # which area currently to work on
+  RUN_NAME: PM_MEI_in_vivo_validation_with_grid_mean_predictor_2
+  RUN_FOLDER: runs/PM_MEI_in_vivo_validation_with_grid_mean_predictor_2
+  area_id: 0             # which area currently to work on
   data:
     area_of_interest: PM

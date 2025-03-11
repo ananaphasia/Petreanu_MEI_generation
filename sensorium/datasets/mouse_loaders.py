@@ -232,7 +232,12 @@ def static_loader(
     elif "GrayImageNet" in path:
         data_key = path.split("static")[-1].split("-GrayImageNet")[0]
     else:
-        data_key = f"{dat.neurons.animal_ids[0]}-{dat.neurons.sessions[0]}-{dat.neurons.scan_idx[0]}"
+        try:
+            data_key = f"{dat.neurons.animal_ids[0]}-{dat.neurons.sessions[0]}-{dat.neurons.scan_idx[0]}"
+        except:
+            print(dat.neurons.animal_ids)
+            print(dat.neurons.sessions)
+            print(dat.neurons.scan_idx)
 
     # subsample images
     dataloaders = {}
