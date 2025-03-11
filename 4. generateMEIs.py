@@ -307,7 +307,7 @@ for imei, mei_out in enumerate(meis):
         img.save(os.path.join(run_config['MEIs']['local_output_folder'],'%s.jpg' % cell_ids[imei]), format='JPEG')
 
 fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-fig.suptitle("Mouse MEIs", y=0.91, fontsize=50)
+fig.suptitle(f"{area_of_interest} MEIs", y=0.91, fontsize=50)
 for i in tqdm(range(8)):
     for j in range(5):
         index = i * 5 + j
@@ -323,7 +323,7 @@ for i in tqdm(range(8)):
         axes[i, j].spines['right'].set_linewidth(1)
         axes[i, j].set_xticks([])
         axes[i, j].set_yticks([])
-plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
+plt.subplots_adjust(wspace=0, hspace=-0.6)
 # os.makedirs("Plots", exist_ok=True)
 # plt.savefig("Plots/MouseMEIsTop200.png", dpi=300)
 os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
@@ -347,7 +347,7 @@ for k in range(num_models):
     # meis = torch.load(f"MEIs/meis_model_{k}.pth")
     meis = torch.load(f'{RUN_FOLDER}/meis_model_{k}.pth')
     fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-    fig.suptitle(f"Mouse MEIs model {k}", y=0.91, fontsize=50)
+    fig.suptitle(f"{area_of_interest} MEIs Model {k}", y=0.91, fontsize=50)
     for i in tqdm(range(8)):
         for j in range(5):
             index = i * 5 + j
@@ -362,7 +362,7 @@ for k in range(num_models):
             axes[i, j].spines['right'].set_linewidth(1)
             axes[i, j].set_xticks([])
             axes[i, j].set_yticks([])
-    plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
+    plt.subplots_adjust(wspace=0, hspace=-0.6)
     # os.makedirs("Plots", exist_ok=True)
     # plt.savefig(f"Plots/MouseMEIsTop200Model{k}.png", dpi=300)
     os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
@@ -381,7 +381,7 @@ meis_list = torch.stack(meis_list, dim=0)
 avg_meis = meis_list.mean(dim=0)
 
 fig, axes = plt.subplots(8,5, figsize=(20,20), dpi=300)
-fig.suptitle("Mouse MEIs Average", y=0.91, fontsize=50)
+fig.suptitle(f"{area_of_interest} MEIs Average", y=0.91, fontsize=50)
 for i in tqdm(range(8)):
     for j in range(5):
         index = i * 5 + j
@@ -396,7 +396,7 @@ for i in tqdm(range(8)):
         axes[i, j].spines['right'].set_linewidth(1)
         axes[i, j].set_xticks([])
         axes[i, j].set_yticks([])
-plt.subplots_adjust(wspace=-0.25, hspace=-0.1)
+plt.subplots_adjust(wspace=0, hspace=-0.6)
 # os.makedirs("Plots", exist_ok=True)
 # plt.savefig("Plots/MouseMEIsTop200Average.png", dpi=300)
 os.makedirs(f'{RUN_FOLDER}/Plots', exist_ok=True)
