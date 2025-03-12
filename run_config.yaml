@@ -1,6 +1,6 @@
 ## Configuration file for the run
 
-RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor_2, MEI_in_vivo_validation_without_grid_mean_predictor_2] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
+RUN_NAME_S: [MEI_in_vivo_validation_dark_reared,] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
 # RUN_NAME_S: [MEI_in_vivo_validation_with_grid_mean_predictor_second_step] # MUST be set. Creates a subfolder in the runs folder with this name, containing data, saved models, etc. IMPORTANT: all values in this folder WILL be deleted.
 
   # Also, prepends the current area_of_interest + '_'. Either a string or a list of strings.
@@ -44,8 +44,8 @@ dev:
 ### DO NOT TOUCH AFTER THIS LINE! THESE VALUES ARE PROGRAMATICALLY UPDATED DURING RUNS
 ### Conversely: if you want to run a specific run, change these values. See in `0. run_pipeline.py` how they're set and generated.
 current_vals:
-  RUN_NAME: PM_MEI_in_vivo_validation_with_grid_mean_predictor_2
-  RUN_FOLDER: runs/PM_MEI_in_vivo_validation_with_grid_mean_predictor_2
+  RUN_NAME: PM_MEI_in_vivo_validation_dark_reared
+  RUN_FOLDER: runs/PM_MEI_in_vivo_validation_dark_reared
   area_id: 0             # which area currently to work on
   data:
     area_of_interest: PM
